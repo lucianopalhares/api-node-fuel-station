@@ -29,3 +29,8 @@ Registra aqui o que de principal foi concluído e as decisões tomadas.
 - Modulo de cidades com estados, usando use cases, entidades e repository.
 - Sql para criar tabelas de cidades e estados.
 
+## Acesso a dados
+
+- O domínio e os casos de uso dependem de abstrações (`CityRepository` e `DatabaseClient`), enquanto o PostgreSQL fica isolado nos adapters. Assim, a infraestrutura pode ser substituída sem alterar a regra de negócio; o SQL e o schema continuam específicos do PostgreSQL.
+
+

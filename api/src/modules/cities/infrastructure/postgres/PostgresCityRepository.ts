@@ -1,13 +1,13 @@
 // buscar cidade no banco de dados
 
-import { Pool } from 'pg';
 import { City } from '../../domain/entities/City';
 import { CityRepository, CitySearch } from '../../domain/repositories/CityRepository';
+import { DatabaseClient } from '../../../shared/infrastructure/database/DatabaseClient';
 
 type CityRow = { ibge_code: number; name: string; state_ibge_code: number; abbreviation: string; state_name: string; region: string };
 
 export class PostgresCityRepository implements CityRepository {
-  constructor(private readonly pool: Pool) {}
+  constructor(private readonly database: DatabaseClient) {}
 
   async list(search: CitySearch): Promise<City[]> {
     const values: unknown[] = [];
@@ -16,7 +16,7 @@ export class PostgresCityRepository implements CityRepository {
     if (search.normalizedName) { values.push(`%${search.normalizedName}%`); conditions.push(`c.normalized_name LIKE $${values.length}`); }
     values.push(search.limit);
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
-    const result = await this.pool.query<CityRow>(
+    const result = await this.database.query<CityRow>(
       `SELECT c.ibge_code, c.name, s.ibge_code AS state_ibge_code, s.abbreviation,
               s.name AS state_name, s.region
          FROM cities c JOIN states s ON s.id = c.state_id ${where}
@@ -27,7 +27,7 @@ export class PostgresCityRepository implements CityRepository {
   }
 
   async findByIbgeCode(ibgeCode: number): Promise<City | null> {
-    const result = await this.pool.query<CityRow>(
+    const result = await this.database.query<CityRow>(
       `SELECT c.ibge_code, c.name, s.ibge_code AS state_ibge_code, s.abbreviation,
               s.name AS state_name, s.region
          FROM cities c JOIN states s ON s.id = c.state_id WHERE c.ibge_code = $1`,
