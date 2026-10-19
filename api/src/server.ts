@@ -8,6 +8,12 @@ import { PostgresDatabaseClient } from './modules/cities/infrastructure/postgres
 import { CityController } from './modules/cities/presentation/CityController';
 import { createCityRouter } from './modules/cities/presentation/cityRoutes';
 
+import { GetResponsibleByCpf } from './modules/responsibles/application/use-cases/GetResponsibleByCpf';
+import { ListResponsibles } from './modules/responsibles/application/use-cases/ListResponsibles';
+import { PostgresResponsibleRepository } from './modules/responsibles/infrastructure/postgres/PostgresResponsibleRepository';
+import { ResponsibleController } from './modules/responsibles/presentation/ResponsibleController';
+import { createResponsibleRouter } from './modules/responsibles/presentation/responsibleRoutes';
+
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
 const pool = new Pool({
@@ -19,9 +25,20 @@ const pool = new Pool({
 });
 
 const database = new PostgresDatabaseClient(pool);
+
 const cityRepository = new PostgresCityRepository(database);
-const cityController = new CityController(new ListCities(cityRepository), new GetCityByIbgeCode(cityRepository));
+const cityController = new CityController(
+  new ListCities(cityRepository),
+  new GetCityByIbgeCode(cityRepository)
+);
 app.use('/cities', createCityRouter(cityController));
+
+const responsibleRepository = new PostgresResponsibleRepository(database);
+const responsibleController = new ResponsibleController(
+  new ListResponsibles(responsibleRepository),
+  new GetResponsibleByCpf(responsibleRepository),
+);
+app.use('/responsibles', createResponsibleRouter(responsibleController));
 
 app.get('/health', async (_request, response) => {
   try {

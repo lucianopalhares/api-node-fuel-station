@@ -33,4 +33,10 @@ Registra aqui o que de principal foi concluído e as decisões tomadas.
 
 - O domínio e os casos de uso dependem de abstrações (`CityRepository` e `DatabaseClient`), enquanto o PostgreSQL fica isolado nos adapters. Assim, a infraestrutura pode ser substituída sem alterar a regra de negócio; o SQL e o schema continuam específicos do PostgreSQL.
 
+## Modulo de responsavel
+
+- Implementa o modulo de responsavel, com sql para criar tabelas assim como use cases , repository e rotas. E busca no banco assim como salvar o responsavel e verificar se nao existe conflito de um responsavel por email e cpf.
+
+
+
 
