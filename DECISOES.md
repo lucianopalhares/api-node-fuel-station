@@ -21,6 +21,11 @@ Registra aqui o que de principal foi concluído e as decisões tomadas.
 
 - Criado o README sobre o projeto.
 - Incluída uma nota de que as funcionalidades do desafio ainda não foram implementadas.
-
 - Quando o volume persistente do PostgreSQL estiver com erro de credenciais, precisa recriar com `docker compose down -v` e `docker compose up --build -d`, pra remover os dados dantigos.
+
+## Inicia DDD e Módulo de cidades
+
+- Inicia um padrão DDD.
+- Modulo de cidades com estados, usando use cases, entidades e repository.
+- Sql para criar tabelas de cidades e estados.
 

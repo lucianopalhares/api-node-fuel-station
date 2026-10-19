@@ -1,6 +1,12 @@
 import express from 'express';
 import { Pool } from 'pg';
 
+import { GetCityByIbgeCode } from './modules/cities/application/use-cases/GetCityByIbgeCode';
+import { ListCities } from './modules/cities/application/use-cases/ListCities';
+import { PostgresCityRepository } from './modules/cities/infrastructure/postgres/PostgresCityRepository';
+import { CityController } from './modules/cities/presentation/CityController';
+import { createCityRouter } from './modules/cities/presentation/cityRoutes';
+
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
 const pool = new Pool({
@@ -19,6 +25,10 @@ app.get('/health', async (_request, response) => {
     response.status(503).json({ status: 'error', database: 'unavailable' });
   }
 });
+
+const cityRepository = new PostgresCityRepository(pool);
+const cityController = new CityController(new ListCities(cityRepository), new GetCityByIbgeCode(cityRepository));
+app.use('/cities', createCityRouter(cityController));
 
 const server = app.listen(port, '0.0.0.0', () => {
   console.log(`API listening on port ${port}`);
