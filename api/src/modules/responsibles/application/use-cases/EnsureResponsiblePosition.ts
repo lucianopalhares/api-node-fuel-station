@@ -1,6 +1,7 @@
 import { ResponsiblePosition } from '../../domain/entities/ResponsiblePosition';
 import { ResponsiblePositionRepository } from '../../domain/repositories/ResponsiblePositionRepository';
 import { normalizeRequiredText } from '../../../shared/application/validation/InputValidation';
+import { ValidationError } from '../../../shared/errors/ValidationError';
 
 export class EnsureResponsiblePosition {
   constructor(private readonly repository: ResponsiblePositionRepository) {}

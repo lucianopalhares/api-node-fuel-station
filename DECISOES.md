@@ -84,4 +84,8 @@ Se qualquer combustível da linha não existir no catálogo, a linha inteira ser
 - Normalizações de texto, dígitos, email, inteiros e limites ficam em `modules/shared/application/validation/InputValidation.ts`.
 - Os outros modulos reaproveitam os metodos.
 
+## Módulo para tratamento de erros
+
+- Ter um modulo para acusar erros e ser compartilhado entre os outros modulos para usar-lo.
+
 

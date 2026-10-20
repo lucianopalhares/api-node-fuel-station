@@ -1,6 +1,9 @@
 import express from 'express';
 import { Pool } from 'pg';
 
+import { AppError } from './modules/shared/errors/AppError';
+import { errorHandler } from './modules/shared/errors/errorHandler';
+
 import { GetCityByIbgeCode } from './modules/cities/application/use-cases/GetCityByIbgeCode';
 import { ListCities } from './modules/cities/application/use-cases/ListCities';
 import { PostgresCityRepository } from './modules/cities/infrastructure/postgres/PostgresCityRepository';
@@ -59,6 +62,12 @@ app.get('/health', async (_request, response) => {
     response.status(503).json({ status: 'error', database: 'unavailable' });
   }
 });
+
+app.use((_request, _response, next) => {
+  next(new AppError(404, 'ROUTE_NOT_FOUND', 'A rota solicitada não existe.'));
+});
+
+app.use(errorHandler);
 
 const server = app.listen(port, '0.0.0.0', () => {
   console.log(`API listening on port ${port}`);

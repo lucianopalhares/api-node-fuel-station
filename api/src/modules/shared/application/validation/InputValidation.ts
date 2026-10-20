@@ -1,7 +1,12 @@
+import { ValidationError } from '../../errors/ValidationError';
 
 export function normalizeRequiredText(value: string, message: string): string {
   const normalized = normalizeOptionalText(value);
-  if (normalized === null) throw new Error(message);
+
+  if (normalized === null) {
+    throw new ValidationError('REQUIRED_FIELD', message);
+  }
+  
   return normalized;
 }
 
