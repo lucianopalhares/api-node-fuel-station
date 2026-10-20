@@ -66,3 +66,9 @@ Registra aqui o que de principal foi concluído e as decisões tomadas.
 ## Unicidade do arquivo importado
 
 `imports.file_checksum` possui a constraint `imports_file_checksum_unique`, garantindo que dois registros não representem o mesmo arquivo. O campo continua nullable para preservar compatibilidade com registros ou fluxos que podem não possuir checksum; valores não nulos são únicos. A migration é idempotente e falha caso já existam checksums duplicados.
+
+## Combustíveis informados na importação
+
+A coluna `combustiveis` é uma lista de nomes separados por vírgula dentro do campo CSV. O parser deve dividir a lista, remover espaços extras e normalizar cada item. Cada combustível resolvido no catálogo `fuels` — diretamente ou por `fuel_aliases` — será persistido como um vínculo em `station_fuels`. Esse relacionamento permite vários combustíveis para o mesmo posto.
+
+Se qualquer combustível da linha não existir no catálogo, a linha inteira será marcada como `invalid`. O sistema não criará automaticamente um combustível nem persistirá parcialmente o posto, evitando cadastros causados por erros de digitação e mantendo a integridade da foreign key `station_fuels.fuel_id`. O valor original será preservado em `import_rows.raw_data`, e o erro deverá identificar o combustível desconhecido.
