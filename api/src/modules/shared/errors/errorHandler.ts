@@ -5,6 +5,7 @@ converter erros esperados e inesperados em uma resposta JSON segura.
 import type { ErrorRequestHandler } from 'express';
 import { AppError } from './AppError';
 import { ConflictError } from './ConflictError';
+import { logger } from '../observability/logger';
 
 type PostgresError = Error & { code?: string; constraint?: string };
 
@@ -38,7 +39,7 @@ export const errorHandler: ErrorRequestHandler = (error, request, response, next
     return;
   }
 
-  console.error('Erro não tratado na API', {
+  logger.error('Unhandled API error', {
     method: request.method,
     path: request.originalUrl,
     error,

@@ -26,7 +26,23 @@ import { PostgresStationRepository } from './modules/stations/infrastructure/pos
 import { StationController } from './modules/stations/presentation/StationController';
 import { createStationRouter } from './modules/stations/presentation/stationRoutes';
 
+import { QueuedImportCsv } from './modules/imports/application/QueuedImportCsv';
+import { RabbitMqImportQueue } from './modules/imports/infrastructure/RabbitMqImportQueue';
+import { logger } from './modules/shared/observability/logger';
+
 const app = express();
+
+app.use((request, response, next) => {
+  const startedAt = Date.now();
+  response.on('finish', () => logger.info('HTTP request completed', {
+    method: request.method,
+    path: request.originalUrl,
+    statusCode: response.statusCode,
+    durationMs: Date.now() - startedAt,
+  }));
+  next();
+});
+
 const port = Number(process.env.PORT ?? 3000);
 const pool = new Pool({
   host: process.env.DB_HOST ?? 'localhost',
@@ -40,10 +56,12 @@ const database = new PostgresDatabaseClient(pool);
 
 const storageBucket = process.env.STORAGE_BUCKET ?? 'imports';
 
-const importController = new ImportCsv(
+const importQueue = new RabbitMqImportQueue();
+const importController = new QueuedImportCsv(
   database,
   new S3ObjectStorage(storageBucket),
   storageBucket,
+  importQueue,
 );
 app.use('/imports', createImportRouter(importController));
 
@@ -83,14 +101,23 @@ app.use((_request, _response, next) => {
 app.use(errorHandler);
 
 const server = app.listen(port, '0.0.0.0', () => {
-  console.log(`API listening on port ${port}`);
+  logger.info('API listening', { port });
 });
 
 const shutdown = () => {
+  logger.info('API shutting down');
   server.close(() => {
-    void pool.end().finally(() => process.exit(0));
+    void importQueue.close().finally(() => pool.end().finally(() => process.exit(0)));
   });
 };
 
+process.on('uncaughtException', (error) => {
+  logger.error('Uncaught exception', { error });
+  shutdown();
+});
+process.on('unhandledRejection', (reason) => {
+  logger.error('Unhandled promise rejection', { reason });
+  shutdown();
+});
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);

@@ -96,5 +96,13 @@ Se qualquer combustível da linha não existir no catálogo, a linha inteira ser
 
 - Tambem foi mudado de pasta o arquivo de validar alguns dados para uma pasta geral de validação.
 
+## Fila e observabilidade
 
+- A API salva o CSV no storage e publica uma tarefa na fila RabbitMQ `imports`.
+- O worker processa a tarefa em segundo plano e atualiza o status da importação.
+- Falhas são enviadas para a dead-letter queue `imports.dlq`.
+- O caso de uso depende da interface `ImportQueue`, mantendo o broker substituível.
+- Os logs da API e do worker são estruturados em JSON e visualizados pelo Dozzle.
+- O painel RabbitMQ permite acompanhar filas, mensagens e consumidores.
+- As credenciais locais padrão são `ipdv/ipdv`.
 

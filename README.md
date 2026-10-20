@@ -57,4 +57,43 @@ Remover também o volume e os dados do banco:
 docker compose down -v
 ```
 
+## Observabilidade
+
+Use o Dozzle em `http://localhost:9999` para ver os logs da API e do worker em tempo real. Ele ajuda a ver erros de requisição e falhas no processamento.
+
+Use o painel RabbitMQ em `http://localhost:15673` para acompanhar a fila `imports`, mensagens pendentes, consumidores ativos e a fila de erros `imports.dlq`. Permite verificar se a importação foi publicada, processada ou encaminhada para erro.
+
+As credenciais do RabbitMQ são `ipdv/ipdv`.
+
+### Endereços
+
+```text
+API:       http://localhost:3261
+Dozzle:    http://localhost:9999
+RabbitMQ:  http://localhost:15673
+```
+
+RabbitMQ:
+
+```text
+usuário: ipdv
+senha:   ipdv
+```
+
+## Testar importação
+
+```sh
+curl -i -F file=@docs/example.csv http://localhost:3261/imports
+```
+
+A resposta esperada é `202 Accepted` com status `queued`.
+
+Para acompanhar o processamento:
+
+```sh
+docker compose logs -f api worker rabbitmq
+```
+
+No RabbitMQ, verifique as filas `imports` e `imports.dlq`. No Dozzle, consulte os logs da API e do worker.
+
 
