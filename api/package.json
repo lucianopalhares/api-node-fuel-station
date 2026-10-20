@@ -8,7 +8,10 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "db:migrate": "node scripts/run-sql-directory.mjs migrations",
+    "db:seed:production": "node scripts/run-sql-directory.mjs seeders/production",
+    "db:seed:fixtures": "node scripts/run-sql-directory.mjs seeders/fixtures"
   },
   "dependencies": {
     "express": "^5.1.0",

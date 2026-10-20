@@ -1,0 +1,2 @@
+cnpj;nome_posto;nome_fantasia;bandeira;logradouro;numero;complemento;bairro;municipio;uf;cep;cpf_responsavel;nome_responsavel;email_responsavel;cargo_responsavel;combustiveis;status;data_inauguracao;numero_bicos;numero_pistas;observacoes
+10234600000001;Petrobras Comércio de Combustíveis Ltda - Fixture;Posto Fixture Central;Petrobras;Rua Augusta;100;;Moema;São Paulo;SP;01301000;12345600110;Maria Silva Ferreira;maria.fixture@grupoabast.com.br;Gerente de Posto;Gasolina Comum,Etanol,Diesel S10;ativo;01/01/2020;8;4;Fixture controlada para validar a importação ponta a ponta.

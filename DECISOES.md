@@ -41,6 +41,11 @@ Registra aqui o que de principal foi concluído e as decisões tomadas.
 
 - Implementa o modulo de posto de combustivel. Cria as tabelas necessarias de posto de combustivel, de tipos de combustivel, de bandeira do combustivel e da importacao da planilha.
 
+## Seeder e Migrations
+
+- As migrations e os seeders foram separados para manter a estrutura do banco independente dos dados iniciais, permitindo executar `db:migrate` e `db:seed:production` de forma controlada e idempotente.
+- Seeders para alimentar dados padroes e ja um posto de combustivel pra teste.
+
 
 
 
