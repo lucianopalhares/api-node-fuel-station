@@ -7,6 +7,7 @@ import { logger } from '../../shared/observability/logger';
 import { DigestTransform, createImportStorageKey } from '../../shared/utils/ImportFileUtils';
 import { S3ObjectStorage } from '../infrastructure/S3ObjectStorage';
 import type { ImportQueue } from './ports/ImportQueue';
+import { ConflictError } from '../../shared/errors/ConflictError';
 
 type UploadInput = { filename: string; contentType: string; stream: Readable };
 type QueuedImport = { id: string; status: 'queued'; storageKey: string; fileSize: number };
@@ -69,13 +70,59 @@ export class QueuedImportCsv {
     uploaded: { size: number; checksum: string },
     contentType: string,
   ): Promise<void> {
-    await this.database.query(
-      `UPDATE imports
-          SET file_checksum = $1, storage_bucket = $2, storage_key = $3,
-              file_size = $4, content_type = $5
-        WHERE id = $6`,
-      [uploaded.checksum, this.bucket, key, uploaded.size, contentType, importId],
+    const existing = await this.database.query<{ id: string }>(
+      `SELECT id
+        FROM imports
+        WHERE file_checksum = $1
+        ORDER BY id
+        LIMIT 1`,
+      [uploaded.checksum],
     );
+
+    if (existing.rows[0]) {
+      throw new ConflictError(
+        'FILE_ALREADY_IMPORTED',
+        `Este arquivo já foi importado anteriormente. Importação: ${existing.rows[0].id}.`,
+        { importId: existing.rows[0].id },
+      );
+    }
+
+    try {
+      await this.database.query(
+        `UPDATE imports
+            SET file_checksum = $1, storage_bucket = $2, storage_key = $3,
+                file_size = $4, content_type = $5
+          WHERE id = $6`,
+        [uploaded.checksum, this.bucket, key, uploaded.size, contentType, importId],
+      );
+    } catch (error) {
+      const postgresError = error as { code?: string; constraint?: string };
+
+      if (
+        postgresError.code === '23505' &&
+        postgresError.constraint === 'imports_file_checksum_unique'
+      ) {
+        const concurrentImport = await this.database.query<{ id: string }>(
+          `SELECT id
+            FROM imports
+            WHERE file_checksum = $1
+            ORDER BY id
+            LIMIT 1`,
+          [uploaded.checksum],
+        );
+
+        if (concurrentImport.rows[0]) {
+          throw new ConflictError(
+            'FILE_ALREADY_IMPORTED',
+            `Este arquivo já foi importado anteriormente. Importação: ${concurrentImport.rows[0].id}.`,
+            { importId: concurrentImport.rows[0].id },
+          );
+        }
+      }
+
+      throw error;
+    }
+
     logger.info('import.metadata.persisted', { importId, storageKey: key });
   }
 
