@@ -29,7 +29,22 @@ CREATE TABLE IF NOT EXISTS stations (
   CONSTRAINT stations_numero_pistas_chk CHECK (numero_pistas IS NULL OR numero_pistas >= 0)
 );
 
-CREATE INDEX IF NOT EXISTS stations_municipio_uf_idx ON stations (municipio, uf);
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+      FROM information_schema.columns
+     WHERE table_schema = current_schema()
+       AND table_name = 'stations'
+       AND column_name IN ('municipio', 'uf')
+     GROUP BY table_schema, table_name
+    HAVING COUNT(*) = 2
+  ) THEN
+    CREATE INDEX IF NOT EXISTS stations_municipio_uf_idx
+      ON stations (municipio, uf);
+  END IF;
+END
+$$;
 CREATE INDEX IF NOT EXISTS stations_brand_id_idx ON stations (brand_id);
 CREATE INDEX IF NOT EXISTS stations_responsible_id_idx ON stations (responsible_id);
 
