@@ -79,3 +79,9 @@ Se qualquer combustível da linha não existir no catálogo, a linha inteira ser
 - Quando preenchido, o email é aparado, convertido para lowercase e validado na aplicação antes da busca ou criação do responsável.
 - A validação exige um formato simples `local@dominio.tld` e no máximo 254 caracteres, limite compatível com a coluna `responsibles.email`.
 
+## Módulo para compartilhar validação e tratamento
+
+- Normalizações de texto, dígitos, email, inteiros e limites ficam em `modules/shared/application/validation/InputValidation.ts`.
+- Os outros modulos reaproveitam os metodos.
+
+

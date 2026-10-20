@@ -3,14 +3,16 @@
 import { Request, Response } from 'express';
 import { GetCityByIbgeCode } from '../application/use-cases/GetCityByIbgeCode';
 import { ListCities } from '../application/use-cases/ListCities';
+import { parseOptionalInteger } from '../../shared/application/validation/InputValidation';
 
 export class CityController {
   constructor(private readonly listCities: ListCities, private readonly getCityByIbgeCode: GetCityByIbgeCode) {}
 
   async list(request: Request, response: Response): Promise<void> {
-    const limit = request.query.limit ? Number(request.query.limit) : undefined;
+    const hasLimit = request.query.limit !== undefined && request.query.limit !== '';
+    const limit = parseOptionalInteger(request.query.limit);
 
-    if (limit !== undefined && !Number.isInteger(limit)) { response.status(400).json({ error: 'limit deve ser um número inteiro' }); return; }
+    if (hasLimit && limit === undefined) { response.status(400).json({ error: 'limit deve ser um número inteiro' }); return; }
 
     const cities = await this.listCities.execute({
       state: typeof request.query.state === 'string' ? request.query.state : undefined,
@@ -22,9 +24,9 @@ export class CityController {
   }
 
   async getByIbgeCode(request: Request, response: Response): Promise<void> {
-    const ibgeCode = Number(request.params.ibgeCode);
+    const ibgeCode = parseOptionalInteger(request.params.ibgeCode);
 
-    if (!Number.isInteger(ibgeCode)) { response.status(400).json({ error: 'código IBGE inválido' }); return; }
+    if (ibgeCode === undefined) { response.status(400).json({ error: 'código IBGE inválido' }); return; }
 
     const city = await this.getCityByIbgeCode.execute(ibgeCode);
 
