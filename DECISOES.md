@@ -62,3 +62,7 @@ Registra aqui o que de principal foi concluído e as decisões tomadas.
 `import_rows.raw_data` guarda valores recebidos e `import_rows.normalized_data` registra a representação tratada usada na importação.
 
 `station_imports` e `station_import_fuels` foram removidas porque não representavam todas as linhas do arquivo: a chave dependia do posto e não permitia registrar duplicidades ou linhas sem posto associado.
+
+## Unicidade do arquivo importado
+
+`imports.file_checksum` possui a constraint `imports_file_checksum_unique`, garantindo que dois registros não representem o mesmo arquivo. O campo continua nullable para preservar compatibilidade com registros ou fluxos que podem não possuir checksum; valores não nulos são únicos. A migration é idempotente e falha caso já existam checksums duplicados.

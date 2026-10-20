@@ -10,4 +10,5 @@
 \ir migrations/006_catalog_aliases.sql
 \ir migrations/011_import_rows.sql
 \ir seeders/production/001_catalogs.sql
+\ir migrations/012_import_file_checksum_unique.sql
 
