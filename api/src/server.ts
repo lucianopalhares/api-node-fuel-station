@@ -96,6 +96,16 @@ const importResultController = new ImportResultController(
 );
 app.use('/import-results', createImportResultRouter(importResultController));
 
+import { ExportImport } from './modules/exports/application/ExportImport';
+import { PostgresImportExportRepository } from './modules/exports/infrastructure/postgres/PostgresImportExportRepository';
+import { ExportController } from './modules/exports/presentation/ExportController';
+import { createExportRouter } from './modules/exports/presentation/exportRoutes';
+
+const exportController = new ExportController(
+  new ExportImport(new PostgresImportExportRepository(database)),
+);
+app.use(createExportRouter(exportController));
+
 app.get('/health', async (_request, response) => {
   try {
     await database.query('SELECT 1');

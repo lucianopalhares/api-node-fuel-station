@@ -115,3 +115,8 @@ Se qualquer combustível da linha não existir no catálogo, a linha inteira ser
 # Salva as linhas da importação
 
 - Cria os postos de combustivel na importação do arquivo.
+
+# Módulo para exportar uma importação feita
+
+- Exporta os dados, levando em consideração que ele busca os dados do banco de dados relacionado a alguma importação que foi feita passando o id da importação.
+
