@@ -21,12 +21,21 @@ function normalizeInput(input: ResponsibleInput): ResponsibleInput {
   const cpf = input.cpf.replace(/\D/g, '');
   if (cpf.length !== 11) throw new Error('CPF do responsável deve conter 11 dígitos');
 
+  const email = normalizeOptional(input.email)?.toLowerCase() ?? null;
+  if (email !== null && !isValidEmail(email)) {
+    throw new Error('email do responsável inválido');
+  }
+
   return {
     cpf,
     name: normalizeOptional(input.name),
-    email: normalizeOptional(input.email)?.toLowerCase() ?? null,
+    email,
     positionId: input.positionId ?? null,
   };
+}
+
+function isValidEmail(value: string): boolean {
+  return value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
 function normalizeOptional(value: string | null | undefined): string | null {
