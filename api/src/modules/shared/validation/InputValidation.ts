@@ -33,3 +33,46 @@ export function parseOptionalInteger(value: unknown): number | undefined {
 export function clampInteger(value: number | undefined, fallback: number, minimum: number, maximum: number): number {
   return Math.min(Math.max(value ?? fallback, minimum), maximum);
 }
+
+export function hasExactDigits(value: string | null | undefined, length: number): boolean {
+  return normalizeDigits(value).length === length;
+}
+
+export function isValidCpf(value: string): boolean {
+  const digits = normalizeDigits(value);
+
+  if (digits.length !== 11 || /^([0-9])\1{10}$/.test(digits)) return false;
+
+  const calculateDigit = (length: number): number => {
+    const sum = digits
+      .slice(0, length)
+      .split('')
+      .reduce((total, digit, index) => total + Number(digit) * (length + 1 - index), 0);
+    const remainder = sum % 11;
+    return remainder < 2 ? 0 : 11 - remainder;
+  };
+
+  return calculateDigit(9) === Number(digits[9])
+    && calculateDigit(10) === Number(digits[10]);
+}
+
+export function isValidCnpj(value: string): boolean {
+  const digits = normalizeDigits(value);
+
+  if (digits.length !== 14 || /^([0-9])\1{13}$/.test(digits)) return false;
+
+  const calculateDigit = (length: number): number => {
+    const weights = length === 12
+      ? [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]
+      : [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+    const sum = digits
+      .slice(0, length)
+      .split('')
+      .reduce((total, digit, index) => total + Number(digit) * weights[index], 0);
+    const remainder = sum % 11;
+    return remainder < 2 ? 0 : 11 - remainder;
+  };
+
+  return calculateDigit(12) === Number(digits[12])
+    && calculateDigit(13) === Number(digits[13]);
+}

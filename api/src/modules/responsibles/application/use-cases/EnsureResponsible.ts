@@ -1,6 +1,7 @@
 import { Responsible } from '../../domain/entities/Responsible';
 import { ResponsibleInput, ResponsibleRepository } from '../../domain/repositories/ResponsibleRepository';
 import {
+  hasExactDigits,
   isValidEmail,
   normalizeDigits,
   normalizeOptionalText,
@@ -28,7 +29,7 @@ export class EnsureResponsible {
 function normalizeInput(input: ResponsibleInput): ResponsibleInput {
   const cpf = normalizeDigits(input.cpf);
 
-  if (cpf.length !== 11) {
+  if (!hasExactDigits(cpf, 11)) {
     throw new ValidationError(
       'INVALID_CPF',
       'O CPF do responsável deve conter 11 dígitos.',

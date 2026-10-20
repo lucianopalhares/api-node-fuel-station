@@ -9,7 +9,3 @@ export class GetResponsibleByCpf {
     return this.repository.findByCpf(normalizeDigits(cpf));
   }
 }
-
-function normalizeCpf(cpf: string): string {
-  return cpf.replace(/\D/g, '');
-}

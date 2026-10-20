@@ -1,7 +1,7 @@
 //  normalizar uma linha do CSV e persistir o posto e seus relacionamentos.
 
 import { DatabaseClient } from '../../shared/infrastructure/database/DatabaseClient';
-import { isValidEmail } from '../../shared/validation/InputValidation';
+import { hasExactDigits, isValidEmail } from '../../shared/validation/InputValidation';
 
 export type CsvStationRow = Record<string, string>;
 
@@ -114,18 +114,34 @@ function normalizeRow(row: CsvStationRow): CsvStationRow {
 }
 
 function validateRow(row: CsvStationRow): void {
-  if (!/^\d{14}$/.test(row.cnpj)) throw new RowError('CNPJ deve conter 14 dígitos.', 'cnpj');
+  if (!hasExactDigits(row.cnpj, 14)) throw new RowError('CNPJ deve conter 14 dígitos.', 'cnpj');
   if (!row.nome_posto) throw new RowError('Nome do posto é obrigatório.', 'nome_posto');
-  if (!row.municipio) throw new RowError('Município é obrigatório.', 'municipio');
-  if (!/^[A-Z]{2}$/.test(row.uf)) throw new RowError('UF deve conter duas letras.', 'uf');
-  if (row.cep && !/^\d{8}$/.test(row.cep)) throw new RowError('CEP deve conter 8 dígitos.', 'cep');
-  if (!/^\d{11}$/.test(row.cpf_responsavel)) throw new RowError('CPF deve conter 11 dígitos.', 'cpf_responsavel');
-  if (row.email_responsavel && !isValidEmail(row.email_responsavel)) throw new RowError('Email inválido.', 'email_responsavel');
   if (!row.bandeira) throw new RowError('Bandeira é obrigatória.', 'bandeira');
-  if (!row.combustiveis) throw new RowError('Ao menos um combustível é obrigatório.', 'combustiveis');
+  if (!row.logradouro) throw new RowError('Logradouro é obrigatório.', 'logradouro');
+  if (!row.bairro) throw new RowError('Bairro é obrigatório.', 'bairro');
+  if (!row.municipio) throw new RowError('Município é obrigatório.', 'municipio');
+  if (!/^[A-Z]{2}$/.test(row.uf)) {
+    throw new RowError('UF deve conter duas letras.', 'uf');
+  }
+  if (!hasExactDigits(row.cep, 8)) throw new RowError('CEP deve conter 8 dígitos.', 'cep');
+  if (!hasExactDigits(row.cpf_responsavel, 11)) {
+    throw new RowError('CPF deve conter 11 dígitos.', 'cpf_responsavel');
+  }
+  if (!row.nome_responsavel) {
+    throw new RowError('Nome do responsável é obrigatório.', 'nome_responsavel');
+  }
+  if (row.email_responsavel && !isValidEmail(row.email_responsavel)) {
+    throw new RowError('Email inválido.', 'email_responsavel');
+  }
+  if (!row.combustiveis || splitList(row.combustiveis).length === 0) {
+    throw new RowError('Ao menos um combustível é obrigatório.', 'combustiveis');
+  }
   if (!row.status) throw new RowError('Status é obrigatório.', 'status');
+
   for (const field of ['numero_bicos', 'numero_pistas']) {
-    if (row[field] && !/^\d+$/.test(row[field])) throw new RowError('O valor deve ser um inteiro não negativo.', field);
+    if (row[field] && !/^\d+$/.test(row[field])) {
+      throw new RowError('O valor deve ser um inteiro não negativo.', field);
+    }
   }
 }
 

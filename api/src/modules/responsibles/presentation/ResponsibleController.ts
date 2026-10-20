@@ -1,7 +1,11 @@
 import { Request, Response } from 'express';
 import { GetResponsibleByCpf } from '../application/use-cases/GetResponsibleByCpf';
 import { ListResponsibles } from '../application/use-cases/ListResponsibles';
-import { normalizeDigits, parseOptionalInteger } from '../../shared/validation/InputValidation';
+import {
+  hasExactDigits,
+  normalizeDigits,
+  parseOptionalInteger,
+} from '../../shared/validation/InputValidation';
 import { NotFoundError } from '../../shared/errors/NotFoundError';
 import { ValidationError } from '../../shared/errors/ValidationError';
 
@@ -29,7 +33,7 @@ export class ResponsibleController {
     const rawCpf = request.params.cpf;
     const cpf = typeof rawCpf === 'string' ? normalizeDigits(rawCpf) : '';
 
-    if (cpf.length !== 11) {
+    if (!hasExactDigits(cpf, 11)) {
       throw new ValidationError(
         'INVALID_CPF',
         'O CPF informado é inválido.',
