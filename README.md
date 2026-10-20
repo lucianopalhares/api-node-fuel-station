@@ -10,15 +10,16 @@ API em Node.js `22.23.2`, Express e TypeScript. O PostgreSQL é acessado com `pg
 
 ## Executar migrations e seeders
 
+Copie as variáveis de ambiente e construa a imagem da API:
+
 ```sh
 cp .env.example .env
-docker compose up --build
+docker compose build api
 ```
 
-Primeiro, construa a imagem e inicie o PostgreSQL:
+Em seguida, inicie somente o PostgreSQL:
 
 ```sh
-docker compose build api
 docker compose up -d db
 ```
 
@@ -28,8 +29,6 @@ docker compose up -d db
 
 Depois que o banco estiver disponível, execute os comandos npm dentro do
 container da API:
-
-### Executar migrations e seeders
 
 ```sh
 docker compose run --rm api npm run db:migrate
