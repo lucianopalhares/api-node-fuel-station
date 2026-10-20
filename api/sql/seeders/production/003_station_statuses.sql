@@ -4,6 +4,7 @@ INSERT INTO station_statuses (name, normalized_name)
 VALUES
   ('Ativo', 'ativo'),
   ('Inativo', 'inativo'),
+  ('Em implantação', 'em_implantacao'),
   ('Em manutenção', 'em manutencao'),
   ('Temporariamente fechado', 'temporariamente fechado'),
   ('Interditado', 'interditado')
