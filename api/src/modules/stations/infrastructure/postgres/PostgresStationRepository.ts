@@ -46,8 +46,8 @@ export class PostgresStationRepository implements StationRepository {
               s.complemento AS complement,
               s.bairro AS neighborhood,
               c.ibge_code AS city_ibge_code,
-              s.municipio AS city,
-              s.uf AS state,
+              c.name AS city,
+              st.abbreviation AS state,
               s.cep AS postal_code,
               r.id AS responsible_id,
               r.cpf AS responsible_cpf,
@@ -65,12 +65,13 @@ export class PostgresStationRepository implements StationRepository {
               s.observacoes AS notes
          FROM stations s
          LEFT JOIN brands b ON b.id = s.brand_id
-         LEFT JOIN cities c ON c.ibge_code = s.city_ibge_code
+         JOIN cities c ON c.ibge_code = s.city_ibge_code
+         JOIN states st ON st.id = c.state_id
          LEFT JOIN responsibles r ON r.id = s.responsible_id
          LEFT JOIN responsible_positions rp ON rp.id = r.position_id
          LEFT JOIN station_fuels sf ON sf.station_id = s.id
          LEFT JOIN fuels f ON f.id = sf.fuel_id
-        GROUP BY s.id, b.id, c.ibge_code, r.id, rp.id
+        GROUP BY s.id, b.id, c.ibge_code, st.abbreviation, r.id, rp.id
         ORDER BY s.nome_fantasia NULLS LAST, s.nome_posto, s.cnpj
         LIMIT $1`,
       [limit],

@@ -46,6 +46,10 @@ Registra aqui o que de principal foi concluído e as decisões tomadas.
 - As migrations e os seeders foram separados para manter a estrutura do banco independente dos dados iniciais, permitindo executar `db:migrate` e `db:seed:production` de forma controlada e idempotente.
 - Seeders para alimentar dados padroes e ja um posto de combustivel pra teste.
 
+## Integridade entre cidade e UF
+
+- `stations` passa a armazenar somente `city_ibge_code` como referência obrigatória. Município e UF são derivados de `cities` e `states` na leitura e na exportação, evitando duas fontes de verdade.
+- Seeder para popular cidades
 
 
 
