@@ -85,6 +85,17 @@ const stationController = new StationController(
 );
 app.use('/stations', createStationRouter(stationController));
 
+import { GetImportDetails } from './modules/import-results/application/GetImportDetails';
+import { ListImports } from './modules/import-results/application/ListImports';
+import { ImportResultController } from './modules/import-results/presentation/ImportResultController';
+import { createImportResultRouter } from './modules/import-results/presentation/importResultRoutes';
+
+const importResultController = new ImportResultController(
+  new ListImports(database),
+  new GetImportDetails(database),
+);
+app.use('/import-results', createImportResultRouter(importResultController));
+
 app.get('/health', async (_request, response) => {
   try {
     await database.query('SELECT 1');

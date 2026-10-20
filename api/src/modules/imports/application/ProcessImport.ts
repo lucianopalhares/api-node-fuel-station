@@ -90,10 +90,12 @@ export class ProcessImport {
     );
   }
 
-  private async markFailed(importId: string): Promise<void> {
+  private async markFailed(importId: string, reason = 'Falha durante o processamento do arquivo.'): Promise<void> {
     await this.database.query(
-      `UPDATE imports SET status = 'failed', finished_at = NOW() WHERE id = $1`,
-      [importId],
+      `UPDATE imports
+          SET status = 'failed', failure_reason = $2, finished_at = NOW()
+        WHERE id = $1`,
+      [importId, reason],
     );
   }
 }

@@ -83,10 +83,12 @@ export class QueuedImportCsv {
     await this.queue.publish({ importId, storageKey });
   }
 
-  private async markFailed(importId: string): Promise<void> {
+  private async markFailed(importId: string, reason = 'Falha ao enviar ou enfileirar o arquivo.'): Promise<void> {
     await this.database.query(
-      `UPDATE imports SET status = 'failed', finished_at = NOW() WHERE id = $1`,
-      [importId],
+      `UPDATE imports
+          SET status = 'failed', failure_reason = $2, finished_at = NOW()
+        WHERE id = $1`,
+      [importId, reason],
     );
   }
 }
