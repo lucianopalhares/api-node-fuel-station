@@ -71,8 +71,6 @@ Registra aqui o que de principal foi concluído e as decisões tomadas.
 
 A coluna `combustiveis` é uma lista de nomes separados por vírgula dentro do campo CSV. O parser deve dividir a lista, remover espaços extras e normalizar cada item. Cada combustível resolvido no catálogo `fuels` — diretamente ou por `fuel_aliases` — será persistido como um vínculo em `station_fuels`. Esse relacionamento permite vários combustíveis para o mesmo posto.
 
-Se qualquer combustível da linha não existir no catálogo, a linha inteira será marcada como `invalid`. O sistema não criará automaticamente um combustível nem persistirá parcialmente o posto, evitando cadastros causados por erros de digitação e mantendo a integridade da foreign key `station_fuels.fuel_id`. O valor original será preservado em `import_rows.raw_data`, e o erro deverá identificar o combustível desconhecido.
-
 ## Validação do email do responsável
 
 - O campo `email_responsavel` é opcional: vazio ou composto apenas por espaços é normalizado para `null`.
@@ -130,3 +128,8 @@ Cada combustível informado é criado ou atualizado no catálogo `fuels` usando 
 
 Além de conferir a quantidade de dígitos, a importação agora valida os dígitos verificadores do CPF e do CNPJ.
 
+## Transação por linha na importação
+
+Cada linha do CSV agora é processada em uma transação PostgreSQL própria. A criação ou atualização do posto, dos responsáveis e catálogos, a remoção e inserção dos combustíveis e o registro em `import_rows` são confirmados juntos.
+
+Se qualquer etapa falhar, a transação executa rollback. Assim, a linha inválida não deixa posto, combustível ou relacionamento parcialmente gravado; o fluxo existente registra a linha como `invalid` depois da reversão.

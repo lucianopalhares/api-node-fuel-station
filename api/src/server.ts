@@ -11,7 +11,7 @@ import { createImportRouter } from './modules/imports/presentation/importRoutes'
 import { GetCityByIbgeCode } from './modules/cities/application/use-cases/GetCityByIbgeCode';
 import { ListCities } from './modules/cities/application/use-cases/ListCities';
 import { PostgresCityRepository } from './modules/cities/infrastructure/postgres/PostgresCityRepository';
-import { PostgresDatabaseClient } from './modules/cities/infrastructure/postgres/PostgresDatabaseClient';
+import { PostgresDatabaseClient } from './modules/shared/infrastructure/database/PostgresDatabaseClient';
 import { CityController } from './modules/cities/presentation/CityController';
 import { createCityRouter } from './modules/cities/presentation/cityRoutes';
 

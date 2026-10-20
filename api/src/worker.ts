@@ -3,7 +3,7 @@
 import { Pool } from 'pg';
 import amqp from 'amqplib';
 import { logger } from './modules/shared/observability/logger';
-import { PostgresDatabaseClient } from './modules/cities/infrastructure/postgres/PostgresDatabaseClient';
+import { PostgresDatabaseClient } from './modules/shared/infrastructure/database/PostgresDatabaseClient';
 import { S3ObjectStorage } from './modules/imports/infrastructure/S3ObjectStorage';
 import { ProcessImport } from './modules/imports/application/ProcessImport';
 

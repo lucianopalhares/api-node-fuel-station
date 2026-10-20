@@ -23,77 +23,80 @@ export class StationImportPersister {
     const normalized = normalizeRow(raw);
     validateRow(normalized);
 
-    const city = await this.database.query<{ ibge_code: number }>(
-      `SELECT c.ibge_code
-         FROM cities c
-         JOIN states s ON s.id = c.state_id
-        WHERE c.normalized_name = $1 AND s.abbreviation = $2`,
-      [normalizeName(normalized.municipio), normalized.uf],
-    );
-    if (!city.rows[0]) throw new RowError('A cidade não foi encontrada no catálogo IBGE.', 'municipio');
+    return this.database.transaction(async (database) => {
 
-    const brandId = await ensureCatalog(this.database, 'brands', normalized.bandeira);
-    const fuelIds = await Promise.all(
-      splitList(normalized.combustiveis).map((fuel) => ensureCatalog(this.database, 'fuels', fuel)),
-    );
-    const statusId = await ensureStatus(this.database, normalized.status);
-    const responsibleId = await ensureResponsible(this.database, normalized);
-
-    const existing = await this.database.query<{ id: string }>(
-      'SELECT id FROM stations WHERE cnpj = $1',
-      [normalized.cnpj],
-    );
-    const station = await this.database.query<{ id: string }>(
-      `INSERT INTO stations (
-         cnpj, nome_posto, nome_fantasia, brand_id, logradouro, numero, complemento,
-         bairro, city_ibge_code, cep, responsible_id, data_inauguracao,
-         numero_bicos, numero_pistas, observacoes, status_id
-       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
-       ON CONFLICT (cnpj) DO UPDATE SET
-         nome_posto = EXCLUDED.nome_posto,
-         nome_fantasia = EXCLUDED.nome_fantasia,
-         brand_id = EXCLUDED.brand_id,
-         logradouro = EXCLUDED.logradouro,
-         numero = EXCLUDED.numero,
-         complemento = EXCLUDED.complemento,
-         bairro = EXCLUDED.bairro,
-         city_ibge_code = EXCLUDED.city_ibge_code,
-         cep = EXCLUDED.cep,
-         responsible_id = EXCLUDED.responsible_id,
-         data_inauguracao = EXCLUDED.data_inauguracao,
-         numero_bicos = EXCLUDED.numero_bicos,
-         numero_pistas = EXCLUDED.numero_pistas,
-         observacoes = EXCLUDED.observacoes,
-         status_id = EXCLUDED.status_id,
-         updated_at = NOW()
-       RETURNING id`,
-      [
-        normalized.cnpj, normalized.nome_posto, nullable(normalized.nome_fantasia), brandId,
-        nullable(normalized.logradouro), nullable(normalized.numero), nullable(normalized.complemento),
-        nullable(normalized.bairro), city.rows[0].ibge_code, nullable(normalized.cep), responsibleId,
-        nullable(normalized.data_inauguracao), toInteger(normalized.numero_bicos), toInteger(normalized.numero_pistas),
-        nullable(normalized.observacoes), statusId,
-      ],
-    );
-    const stationId = station.rows[0].id;
-
-    await this.database.query('DELETE FROM station_fuels WHERE station_id = $1', [stationId]);
-    for (const fuelId of fuelIds) {
-      await this.database.query(
-        'INSERT INTO station_fuels (station_id, fuel_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
-        [stationId, fuelId],
+      const city = await database.query<{ ibge_code: number }>(
+        `SELECT c.ibge_code
+          FROM cities c
+          JOIN states s ON s.id = c.state_id
+          WHERE c.normalized_name = $1 AND s.abbreviation = $2`,
+        [normalizeName(normalized.municipio), normalized.uf],
       );
-    }
-    await this.database.query(
-      `INSERT INTO import_rows (import_id, row_number, station_id, raw_data, normalized_data, status)
-       VALUES ($1, $2, $3, $4::jsonb, $5::jsonb, $6)
-       ON CONFLICT (import_id, row_number) DO UPDATE SET
-         station_id = EXCLUDED.station_id, raw_data = EXCLUDED.raw_data,
-         normalized_data = EXCLUDED.normalized_data, status = EXCLUDED.status`,
-      [importId, rowNumber, stationId, JSON.stringify(raw), JSON.stringify(normalized), existing.rows[0] ? 'updated' : 'imported'],
-    );
+      if (!city.rows[0]) throw new RowError('A cidade não foi encontrada no catálogo IBGE.', 'municipio');
 
-    return { status: existing.rows[0] ? 'updated' : 'imported', stationId, normalized };
+      const brandId = await ensureCatalog(this.database, 'brands', normalized.bandeira);
+      const fuelIds = await Promise.all(
+        splitList(normalized.combustiveis).map((fuel) => ensureCatalog(this.database, 'fuels', fuel)),
+      );
+      const statusId = await ensureStatus(database, normalized.status);
+      const responsibleId = await ensureResponsible(database, normalized);
+
+      const existing = await database.query<{ id: string }>(
+        'SELECT id FROM stations WHERE cnpj = $1',
+        [normalized.cnpj],
+      );
+      const station = await database.query<{ id: string }>(
+        `INSERT INTO stations (
+          cnpj, nome_posto, nome_fantasia, brand_id, logradouro, numero, complemento,
+          bairro, city_ibge_code, cep, responsible_id, data_inauguracao,
+          numero_bicos, numero_pistas, observacoes, status_id
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+        ON CONFLICT (cnpj) DO UPDATE SET
+          nome_posto = EXCLUDED.nome_posto,
+          nome_fantasia = EXCLUDED.nome_fantasia,
+          brand_id = EXCLUDED.brand_id,
+          logradouro = EXCLUDED.logradouro,
+          numero = EXCLUDED.numero,
+          complemento = EXCLUDED.complemento,
+          bairro = EXCLUDED.bairro,
+          city_ibge_code = EXCLUDED.city_ibge_code,
+          cep = EXCLUDED.cep,
+          responsible_id = EXCLUDED.responsible_id,
+          data_inauguracao = EXCLUDED.data_inauguracao,
+          numero_bicos = EXCLUDED.numero_bicos,
+          numero_pistas = EXCLUDED.numero_pistas,
+          observacoes = EXCLUDED.observacoes,
+          status_id = EXCLUDED.status_id,
+          updated_at = NOW()
+        RETURNING id`,
+        [
+          normalized.cnpj, normalized.nome_posto, nullable(normalized.nome_fantasia), brandId,
+          nullable(normalized.logradouro), nullable(normalized.numero), nullable(normalized.complemento),
+          nullable(normalized.bairro), city.rows[0].ibge_code, nullable(normalized.cep), responsibleId,
+          nullable(normalized.data_inauguracao), toInteger(normalized.numero_bicos), toInteger(normalized.numero_pistas),
+          nullable(normalized.observacoes), statusId,
+        ],
+      );
+      const stationId = station.rows[0].id;
+
+      await database.query('DELETE FROM station_fuels WHERE station_id = $1', [stationId]);
+      for (const fuelId of fuelIds) {
+        await database.query(
+          'INSERT INTO station_fuels (station_id, fuel_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+          [stationId, fuelId],
+        );
+      }
+      await database.query(
+        `INSERT INTO import_rows (import_id, row_number, station_id, raw_data, normalized_data, status)
+        VALUES ($1, $2, $3, $4::jsonb, $5::jsonb, $6)
+        ON CONFLICT (import_id, row_number) DO UPDATE SET
+          station_id = EXCLUDED.station_id, raw_data = EXCLUDED.raw_data,
+          normalized_data = EXCLUDED.normalized_data, status = EXCLUDED.status`,
+        [importId, rowNumber, stationId, JSON.stringify(raw), JSON.stringify(normalized), existing.rows[0] ? 'updated' : 'imported'],
+      );
+
+      return { status: existing.rows[0] ? 'updated' : 'imported', stationId, normalized };
+    });
   }
 }
 

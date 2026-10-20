@@ -2,4 +2,6 @@
 
 export interface DatabaseClient {
   query<T>(text: string, values?: unknown[]): Promise<{ rows: T[] }>;
+
+  transaction<T>(callback: (client: DatabaseClient) => Promise<T>): Promise<T>;
 }
