@@ -55,3 +55,10 @@ Registra aqui o que de principal foi concluído e as decisões tomadas.
 
 - Permitir guardar status do posto em uma tabela do banco de dados, pois pode ser que existam status diferentes no futuro para o posto.
 
+## Melhora cada linha da importação
+
+`stations` permanece a tabela pra armazenar os postos. Nova tabela `import_rows` registra uma linha para cada linha do CSV, incluindo linhas válidas, duplicadas ou com erro.
+
+`import_rows.raw_data` guarda valores recebidos e `import_rows.normalized_data` registra a representação tratada usada na importação.
+
+`station_imports` e `station_import_fuels` foram removidas porque não representavam todas as linhas do arquivo: a chave dependia do posto e não permitia registrar duplicidades ou linhas sem posto associado.

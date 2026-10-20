@@ -8,7 +8,6 @@
 \ir migrations/004_imports.sql
 \ir migrations/005_stations.sql
 \ir migrations/006_catalog_aliases.sql
-\ir migrations/007_station_import_links.sql
-\ir migrations/008_station_import_fuels.sql
+\ir migrations/011_import_rows.sql
 \ir seeders/production/001_catalogs.sql
 

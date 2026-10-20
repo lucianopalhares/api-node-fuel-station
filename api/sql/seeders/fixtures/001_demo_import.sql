@@ -116,18 +116,65 @@ BEGIN
    WHERE normalized_name IN ('gasolina comum', 'etanol', 'diesel s10')
   ON CONFLICT (station_id, fuel_id) DO NOTHING;
 
-  INSERT INTO station_imports (
+  INSERT INTO import_rows (
     import_id,
+    row_number,
     station_id,
-    responsible_id,
-    source_row_number
+    raw_data,
+    normalized_data,
+    status
   )
-  VALUES (v_import_id, v_station_id, v_responsible_id, 2)
-  ON CONFLICT (import_id, station_id) DO NOTHING;
-
-  INSERT INTO station_import_fuels (import_id, station_id, fuel_id)
-  SELECT v_import_id, v_station_id, id
-    FROM fuels
-   WHERE normalized_name IN ('gasolina comum', 'etanol', 'diesel s10')
-  ON CONFLICT (import_id, station_id, fuel_id) DO NOTHING;
+  VALUES (
+    v_import_id,
+    2,
+    v_station_id,
+    jsonb_build_object(
+      'cnpj', '10234600000001',
+      'nome_posto', 'Petrobras Comércio de Combustíveis Ltda - Fixture',
+      'nome_fantasia', 'Posto Fixture Central',
+      'bandeira', 'Petrobras',
+      'logradouro', 'Rua Augusta',
+      'numero', '100',
+      'complemento', NULL,
+      'bairro', 'Moema',
+      'municipio', 'São Paulo',
+      'uf', 'SP',
+      'cep', '01301000',
+      'cpf_responsavel', '12345600110',
+      'nome_responsavel', 'Maria Silva Ferreira',
+      'email_responsavel', 'maria.fixture@grupoabast.com.br',
+      'cargo_responsavel', 'Gerente de Posto',
+      'combustiveis', 'Gasolina Comum,Etanol,Diesel S10',
+      'status', 'ativo',
+      'data_inauguracao', '01/01/2020',
+      'numero_bicos', '8',
+      'numero_pistas', '4',
+      'observacoes', 'Fixture controlada para validar a importação ponta a ponta.'
+    ),
+    jsonb_build_object(
+      'cnpj', '10234600000001',
+      'nome_posto', 'Petrobras Comércio de Combustíveis Ltda - Fixture',
+      'nome_fantasia', 'Posto Fixture Central',
+      'bandeira', 'Petrobras',
+      'logradouro', 'Rua Augusta',
+      'numero', '100',
+      'complemento', NULL,
+      'bairro', 'Moema',
+      'municipio', 'São Paulo',
+      'uf', 'SP',
+      'cep', '01301000',
+      'cpf_responsavel', '12345600110',
+      'nome_responsavel', 'Maria Silva Ferreira',
+      'email_responsavel', 'maria.fixture@grupoabast.com.br',
+      'cargo_responsavel', 'Gerente de Posto',
+      'status', 'ativo',
+      'data_inauguracao', '2020-01-01',
+      'numero_bicos', 8,
+      'numero_pistas', 4,
+      'combustiveis', jsonb_build_array('Gasolina Comum', 'Etanol', 'Diesel S10'),
+      'observacoes', 'Fixture controlada para validar a importação ponta a ponta.'
+    ),
+    'imported'
+  )
+  ON CONFLICT (import_id, row_number) DO NOTHING;
 END $$;
