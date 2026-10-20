@@ -88,4 +88,13 @@ Se qualquer combustível da linha não existir no catálogo, a linha inteira ser
 
 - Ter um modulo para acusar erros e ser compartilhado entre os outros modulos para usar-lo.
 
+## Importação com storage S3
+
+- O arquivo da importação é enviado para um bucket S3 local. Em desenvolvimento, o Compose usa o Silo (`pgsty/silo`), compatível com a API e o protocolo do MinIO. A tabela `imports` guarda apenas nome, checksum, tamanho, tipo MIME, bucket, chave do objeto, status e contadores. O CSV é relido do storage em streaming para validar o header e contar as linhas.
+
+- Essa primeira versão prioriza somente a primeira etapa de importação para teste para verificar o recebimento do arquivo.
+
+- Tambem foi mudado de pasta o arquivo de validar alguns dados para uma pasta geral de validação.
+
+
 

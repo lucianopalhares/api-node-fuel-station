@@ -3,7 +3,7 @@
 import { Request, Response } from 'express';
 import { GetCityByIbgeCode } from '../application/use-cases/GetCityByIbgeCode';
 import { ListCities } from '../application/use-cases/ListCities';
-import { parseOptionalInteger } from '../../shared/application/validation/InputValidation';
+import { parseOptionalInteger } from '../../shared/validation/InputValidation';
 import { NotFoundError } from '../../shared/errors/NotFoundError';
 import { ValidationError } from '../../shared/errors/ValidationError';
 

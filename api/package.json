@@ -9,18 +9,24 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
+    "dev": "tsx watch src/server.ts",
     "db:migrate": "node scripts/run-sql-directory.mjs migrations",
     "db:seed:production": "node scripts/run-sql-directory.mjs seeders/production",
     "db:seed:fixtures": "node scripts/run-sql-directory.mjs seeders/fixtures"
   },
   "dependencies": {
     "express": "^5.1.0",
-    "pg": "^8.16.3"
+    "pg": "^8.16.3",
+    "@aws-sdk/client-s3": "^3.888.0",
+    "busboy": "^1.6.0",
+    "csv-parse": "^6.1.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
     "@types/node": "^22.18.6",
     "@types/pg": "^8.15.5",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "@types/busboy": "^1.5.4",
+    "tsx": "^4.20.5"
   }
 }

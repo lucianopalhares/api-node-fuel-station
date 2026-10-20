@@ -1,6 +1,6 @@
 import { Responsible } from '../../domain/entities/Responsible';
 import { ResponsibleRepository } from '../../domain/repositories/ResponsibleRepository';
-import { clampInteger } from '../../../shared/application/validation/InputValidation';
+import { clampInteger } from '../../../shared/validation/InputValidation';
 
 export class ListResponsibles {
   constructor(private readonly repository: ResponsibleRepository) {}

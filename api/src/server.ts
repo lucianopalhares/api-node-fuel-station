@@ -4,6 +4,10 @@ import { Pool } from 'pg';
 import { AppError } from './modules/shared/errors/AppError';
 import { errorHandler } from './modules/shared/errors/errorHandler';
 
+import { ImportCsv } from './modules/imports/application/ImportCsv';
+import { S3ObjectStorage } from './modules/imports/infrastructure/S3ObjectStorage';
+import { createImportRouter } from './modules/imports/presentation/importRoutes';
+
 import { GetCityByIbgeCode } from './modules/cities/application/use-cases/GetCityByIbgeCode';
 import { ListCities } from './modules/cities/application/use-cases/ListCities';
 import { PostgresCityRepository } from './modules/cities/infrastructure/postgres/PostgresCityRepository';
@@ -33,6 +37,15 @@ const pool = new Pool({
 });
 
 const database = new PostgresDatabaseClient(pool);
+
+const storageBucket = process.env.STORAGE_BUCKET ?? 'imports';
+
+const importController = new ImportCsv(
+  database,
+  new S3ObjectStorage(storageBucket),
+  storageBucket,
+);
+app.use('/imports', createImportRouter(importController));
 
 const cityRepository = new PostgresCityRepository(database);
 const cityController = new CityController(

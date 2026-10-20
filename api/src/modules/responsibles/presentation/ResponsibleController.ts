@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { GetResponsibleByCpf } from '../application/use-cases/GetResponsibleByCpf';
 import { ListResponsibles } from '../application/use-cases/ListResponsibles';
-import { normalizeDigits, parseOptionalInteger } from '../../shared/application/validation/InputValidation';
+import { normalizeDigits, parseOptionalInteger } from '../../shared/validation/InputValidation';
 import { NotFoundError } from '../../shared/errors/NotFoundError';
 import { ValidationError } from '../../shared/errors/ValidationError';
 

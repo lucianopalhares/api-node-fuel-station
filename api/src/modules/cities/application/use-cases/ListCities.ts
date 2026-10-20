@@ -2,7 +2,7 @@
 
 import { City } from '../../domain/entities/City';
 import { CityRepository } from '../../domain/repositories/CityRepository';
-import { clampInteger, normalizeOptionalText } from '../../../shared/application/validation/InputValidation';
+import { clampInteger, normalizeOptionalText } from '../../../shared/validation/InputValidation';
 
 export class ListCities {
   constructor(private readonly repository: CityRepository) {}

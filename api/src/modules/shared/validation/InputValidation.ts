@@ -1,4 +1,4 @@
-import { ValidationError } from '../../errors/ValidationError';
+import { ValidationError } from '../errors/ValidationError';
 
 export function normalizeRequiredText(value: string, message: string): string {
   const normalized = normalizeOptionalText(value);

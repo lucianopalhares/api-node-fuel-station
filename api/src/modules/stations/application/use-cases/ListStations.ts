@@ -1,6 +1,6 @@
 import { Station } from '../../domain/entities/Station';
 import { StationRepository } from '../../domain/repositories/StationRepository';
-import { clampInteger } from '../../../shared/application/validation/InputValidation';
+import { clampInteger } from '../../../shared/validation/InputValidation';
 
 export class ListStations {
   constructor(private readonly repository: StationRepository) {}

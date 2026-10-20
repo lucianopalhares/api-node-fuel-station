@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { ListStations } from '../application/use-cases/ListStations';
-import { parseOptionalInteger } from '../../shared/application/validation/InputValidation';
+import { parseOptionalInteger } from '../../shared/validation/InputValidation';
 import { ValidationError } from '../../shared/errors/ValidationError';
 
 export class StationController {

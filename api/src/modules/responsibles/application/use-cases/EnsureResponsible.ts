@@ -4,7 +4,7 @@ import {
   isValidEmail,
   normalizeDigits,
   normalizeOptionalText,
-} from '../../../shared/application/validation/InputValidation';
+} from '../../../shared/validation/InputValidation';
 
 import { ConflictError } from '../../../shared/errors/ConflictError';
 import { ValidationError } from '../../../shared/errors/ValidationError';
