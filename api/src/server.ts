@@ -14,6 +14,11 @@ import { PostgresResponsibleRepository } from './modules/responsibles/infrastruc
 import { ResponsibleController } from './modules/responsibles/presentation/ResponsibleController';
 import { createResponsibleRouter } from './modules/responsibles/presentation/responsibleRoutes';
 
+import { ListStations } from './modules/stations/application/use-cases/ListStations';
+import { PostgresStationRepository } from './modules/stations/infrastructure/postgres/PostgresStationRepository';
+import { StationController } from './modules/stations/presentation/StationController';
+import { createStationRouter } from './modules/stations/presentation/stationRoutes';
+
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
 const pool = new Pool({
@@ -39,6 +44,12 @@ const responsibleController = new ResponsibleController(
   new GetResponsibleByCpf(responsibleRepository),
 );
 app.use('/responsibles', createResponsibleRouter(responsibleController));
+
+const stationRepository = new PostgresStationRepository(database);
+const stationController = new StationController(
+  new ListStations(stationRepository),
+);
+app.use('/stations', createStationRouter(stationController));
 
 app.get('/health', async (_request, response) => {
   try {

@@ -37,6 +37,10 @@ Registra aqui o que de principal foi concluído e as decisões tomadas.
 
 - Implementa o modulo de responsavel, com sql para criar tabelas assim como use cases , repository e rotas. E busca no banco assim como salvar o responsavel e verificar se nao existe conflito de um responsavel por email e cpf.
 
+## Modulo posto de combustivel
+
+- Implementa o modulo de posto de combustivel. Cria as tabelas necessarias de posto de combustivel, de tipos de combustivel, de bandeira do combustivel e da importacao da planilha.
+
 
 
 

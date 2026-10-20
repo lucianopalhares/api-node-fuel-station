@@ -1,0 +1,15 @@
+-- tabelas de tipos de combustivel e bandeira
+
+CREATE TABLE IF NOT EXISTS brands (
+  id BIGSERIAL PRIMARY KEY,
+  name VARCHAR(120) NOT NULL UNIQUE,
+  normalized_name VARCHAR(120) NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS fuels (
+  id BIGSERIAL PRIMARY KEY,
+  name VARCHAR(80) NOT NULL UNIQUE,
+  normalized_name VARCHAR(80) NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
