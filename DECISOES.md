@@ -51,5 +51,7 @@ Registra aqui o que de principal foi concluído e as decisões tomadas.
 - `stations` passa a armazenar somente `city_ibge_code` como referência obrigatória. Município e UF são derivados de `cities` e `states` na leitura e na exportação, evitando duas fontes de verdade.
 - Seeder para popular cidades
 
+## Status do posto
 
+- Permitir guardar status do posto em uma tabela do banco de dados, pois pode ser que existam status diferentes no futuro para o posto.
 

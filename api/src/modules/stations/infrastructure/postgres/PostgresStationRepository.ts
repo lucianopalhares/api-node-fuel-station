@@ -58,12 +58,13 @@ export class PostgresStationRepository implements StationRepository {
                 ARRAY_AGG(f.name ORDER BY f.name) FILTER (WHERE f.id IS NOT NULL),
                 ARRAY[]::VARCHAR[]
               ) AS fuels,
-              s.status,
+              ss.name AS status,
               s.data_inauguracao::TEXT AS opening_date,
               s.numero_bicos AS pump_count,
               s.numero_pistas AS lane_count,
               s.observacoes AS notes
          FROM stations s
+         JOIN station_statuses ss ON ss.id = s.status_id
          LEFT JOIN brands b ON b.id = s.brand_id
          JOIN cities c ON c.ibge_code = s.city_ibge_code
          JOIN states st ON st.id = c.state_id
@@ -71,7 +72,7 @@ export class PostgresStationRepository implements StationRepository {
          LEFT JOIN responsible_positions rp ON rp.id = r.position_id
          LEFT JOIN station_fuels sf ON sf.station_id = s.id
          LEFT JOIN fuels f ON f.id = sf.fuel_id
-        GROUP BY s.id, b.id, c.ibge_code, st.abbreviation, r.id, rp.id
+        GROUP BY s.id, b.id, c.ibge_code, st.abbreviation, r.id, rp.id, ss.id
         ORDER BY s.nome_fantasia NULLS LAST, s.nome_posto, s.cnpj
         LIMIT $1`,
       [limit],
