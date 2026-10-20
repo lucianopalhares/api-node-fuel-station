@@ -4,6 +4,7 @@ import { parse } from 'csv-parse';
 import { DatabaseClient } from '../../shared/infrastructure/database/DatabaseClient';
 import { validateCsvHeaders } from '../../shared/validation/CsvImportValidation';
 import { S3ObjectStorage } from '../infrastructure/S3ObjectStorage';
+import { logger } from '../../shared/observability/logger';
 
 export class ProcessImport {
   constructor(
@@ -26,6 +27,12 @@ export class ProcessImport {
           WHERE id = $2`,
         [totalRows, importId],
       );
+
+      logger.warn('Import processed without station persistence', {
+        importId,
+        totalRows,
+        warning: 'CSV rows were counted, but station records were not created.',
+      });
     } catch (error) {
       await this.database.query(
         `UPDATE imports SET status = 'failed', finished_at = NOW() WHERE id = $1`,
