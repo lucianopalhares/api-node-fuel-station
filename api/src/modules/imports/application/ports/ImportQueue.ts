@@ -1,6 +1,4 @@
-// Arquivo novo: /home/dev/dev/desafios/ipdv/api/src/modules/imports/application/ports/ImportQueue.ts
-// Operação: criar.
-// Motivo: definir a porta de aplicação que desacopla os casos de uso do broker escolhido.
+// definir a porta de aplicação que desacopla os casos de uso do broker escolhido.
 
 export type ImportJob = {
   importId: string;

@@ -1,11 +1,15 @@
-// armazenar o upload e enfileirar 
+// faz upload do arquivo para storage e muda status para enfileirado
 
 import type { Readable } from 'node:stream';
 import { normalizeRequiredText } from '../../shared/validation/InputValidation';
 import { DatabaseClient } from '../../shared/infrastructure/database/DatabaseClient';
+import { logger } from '../../shared/observability/logger';
 import { DigestTransform, createImportStorageKey } from '../../shared/utils/ImportFileUtils';
 import { S3ObjectStorage } from '../infrastructure/S3ObjectStorage';
 import type { ImportQueue } from './ports/ImportQueue';
+
+type UploadInput = { filename: string; contentType: string; stream: Readable };
+type QueuedImport = { id: string; status: 'queued'; storageKey: string; fileSize: number };
 
 export class QueuedImportCsv {
   constructor(
@@ -15,40 +19,74 @@ export class QueuedImportCsv {
     private readonly queue: ImportQueue,
   ) {}
 
-  async execute(input: {
-    filename: string;
-    contentType: string;
-    stream: Readable;
-  }): Promise<{ id: string; status: 'queued'; storageKey: string; fileSize: number }> {
+  async execute(input: UploadInput): Promise<QueuedImport> {
     const filename = normalizeRequiredText(input.filename, 'O nome do arquivo é obrigatório.');
-    const created = await this.database.query<{ id: string }>(
+    const importId = await this.createImport(filename);
+    const storageKey = createImportStorageKey(importId);
+    const contentType = input.contentType || 'text/csv';
+    const digest = new DigestTransform();
+    const startedAt = Date.now();
+
+    logger.info('import.upload.started', { importId, filename, contentType });
+    try {
+      const uploaded = await this.upload(storageKey, digest, input.stream, contentType);
+      await this.saveMetadata(importId, storageKey, uploaded, contentType);
+      await this.publish(importId, storageKey);
+      logger.info('import.queue.published', { importId, storageKey, durationMs: Date.now() - startedAt });
+      return { id: importId, status: 'queued', storageKey, fileSize: uploaded.size };
+    } catch (error) {
+      logger.error('import.upload.failed', { importId, storageKey, durationMs: Date.now() - startedAt, error });
+      await this.markFailed(importId);
+      throw error;
+    }
+  }
+
+  private async createImport(filename: string): Promise<string> {
+    const result = await this.database.query<{ id: string }>(
       `INSERT INTO imports (filename, status) VALUES ($1, 'queued') RETURNING id`,
       [filename],
     );
-    const id = created.rows[0].id;
-    const storageKey = createImportStorageKey(id);
-    const digest = new DigestTransform();
-    const contentType = input.contentType || 'text/csv';
+    return result.rows[0].id;
+  }
 
-    try {
-      const upload = this.storage.put(storageKey, digest, contentType);
-      input.stream.pipe(digest);
-      await upload;
-      await this.database.query(
-        `UPDATE imports
-            SET file_checksum = $1, storage_bucket = $2, storage_key = $3,
-                file_size = $4, content_type = $5
-          WHERE id = $6`,
-        [digest.checksum, this.bucket, storageKey, digest.size, contentType, id],
-      );
-      await this.queue.publish({ importId: id, storageKey });
-      return { id, status: 'queued', storageKey, fileSize: digest.size };
-    } catch (error) {
-      await this.database.query(
-        `UPDATE imports SET status = 'failed', finished_at = NOW() WHERE id = $1`,
-        [id],
-      );
-      throw error;
-    }
+  private async upload(
+    key: string,
+    digest: DigestTransform,
+    stream: Readable,
+    contentType: string,
+  ): Promise<{ size: number; checksum: string }> {
+    const upload = this.storage.put(key, digest, contentType);
+    stream.pipe(digest);
+    await upload;
+    const result = { size: digest.size, checksum: digest.checksum };
+    logger.info('import.upload.completed', { storageKey: key, fileSize: result.size, checksum: result.checksum });
+    return result;
+  }
+
+  private async saveMetadata(
+    importId: string,
+    key: string,
+    uploaded: { size: number; checksum: string },
+    contentType: string,
+  ): Promise<void> {
+    await this.database.query(
+      `UPDATE imports
+          SET file_checksum = $1, storage_bucket = $2, storage_key = $3,
+              file_size = $4, content_type = $5
+        WHERE id = $6`,
+      [uploaded.checksum, this.bucket, key, uploaded.size, contentType, importId],
+    );
+    logger.info('import.metadata.persisted', { importId, storageKey: key });
+  }
+
+  private async publish(importId: string, storageKey: string): Promise<void> {
+    await this.queue.publish({ importId, storageKey });
+  }
+
+  private async markFailed(importId: string): Promise<void> {
+    await this.database.query(
+      `UPDATE imports SET status = 'failed', finished_at = NOW() WHERE id = $1`,
+      [importId],
+    );
   }
 }

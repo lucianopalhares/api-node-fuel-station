@@ -111,3 +111,7 @@ Se qualquer combustível da linha não existir no catálogo, a linha inteira ser
 - A migration `013` adiciona à tabela `imports` os metadados do arquivo no storage.
 - A migration `014` permite o status `queued` nas importações.
 - O bootstrap executa as migrations `007` a `010` antes da `011` e inclui a `014` depois da `013`.
+
+# Salva as linhas da importação
+
+- Cria os postos de combustivel na importação do arquivo.
