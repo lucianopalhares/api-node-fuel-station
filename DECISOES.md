@@ -125,3 +125,8 @@ Se qualquer combustível da linha não existir no catálogo, a linha inteira ser
 A coluna `combustiveis` é uma lista de nomes separados por vírgula dentro do campo CSV. O parser divide a lista, remove espaços extras e normaliza cada item.
 
 Cada combustível informado é criado ou atualizado no catálogo `fuels` usando o nome normalizado. Em seguida, o posto recebe os vínculos correspondentes na tabela `station_fuels`.
+
+## CPF e CNPJ
+
+Além de conferir a quantidade de dígitos, a importação agora valida os dígitos verificadores do CPF e do CNPJ.
+

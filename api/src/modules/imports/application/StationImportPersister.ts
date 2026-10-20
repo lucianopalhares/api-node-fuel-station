@@ -1,7 +1,12 @@
 //  normalizar uma linha do CSV e persistir o posto e seus relacionamentos.
 
 import { DatabaseClient } from '../../shared/infrastructure/database/DatabaseClient';
-import { hasExactDigits, isValidEmail } from '../../shared/validation/InputValidation';
+import {
+  hasExactDigits,
+  isValidCnpj,
+  isValidCpf,
+  isValidEmail,
+} from '../../shared/validation/InputValidation';
 
 export type CsvStationRow = Record<string, string>;
 
@@ -114,7 +119,7 @@ function normalizeRow(row: CsvStationRow): CsvStationRow {
 }
 
 function validateRow(row: CsvStationRow): void {
-  if (!hasExactDigits(row.cnpj, 14)) throw new RowError('CNPJ deve conter 14 dígitos.', 'cnpj');
+  if (!isValidCnpj(row.cnpj)) throw new RowError('CNPJ inválido.', 'cnpj');
   if (!row.nome_posto) throw new RowError('Nome do posto é obrigatório.', 'nome_posto');
   if (!row.bandeira) throw new RowError('Bandeira é obrigatória.', 'bandeira');
   if (!row.logradouro) throw new RowError('Logradouro é obrigatório.', 'logradouro');
@@ -124,8 +129,8 @@ function validateRow(row: CsvStationRow): void {
     throw new RowError('UF deve conter duas letras.', 'uf');
   }
   if (!hasExactDigits(row.cep, 8)) throw new RowError('CEP deve conter 8 dígitos.', 'cep');
-  if (!hasExactDigits(row.cpf_responsavel, 11)) {
-    throw new RowError('CPF deve conter 11 dígitos.', 'cpf_responsavel');
+  if (!isValidCpf(row.cpf_responsavel)) {
+    throw new RowError('CPF inválido.', 'cpf_responsavel');
   }
   if (!row.nome_responsavel) {
     throw new RowError('Nome do responsável é obrigatório.', 'nome_responsavel');
@@ -182,10 +187,7 @@ async function ensureResponsible(database: DatabaseClient, row: CsvStationRow): 
 }
 
 function normalizeDocument(value: string): string {
-  const digits = value.replace(/\D/g, '');
-  if (/^\d{14}$/.test(digits)) return digits;
-  const scientific = Number(value.replace(',', '.'));
-  return Number.isFinite(scientific) ? Math.round(scientific).toString() : digits;
+  return value.replace(/\D/g, '');
 }
 
 function normalizeName(value: string): string {
