@@ -9,6 +9,7 @@ import {
   normalizeCnpj,
   normalizeCep,
 } from '../../shared/validation/InputValidation';
+import { InvalidDateError, normalizeDate } from '../../shared/validation/DateValidation';
 
 export type CsvStationRow = Record<string, string>;
 
@@ -123,7 +124,16 @@ function normalizeRow(row: CsvStationRow): CsvStationRow {
   normalized.cep = normalizeCep(normalized.cep);
   normalized.uf = normalized.uf.toUpperCase();
   normalized.email_responsavel = normalized.email_responsavel.toLowerCase();
-  normalized.data_inauguracao = parseDate(normalized.data_inauguracao);
+
+  try {
+    normalized.data_inauguracao = normalizeDate(normalized.data_inauguracao);
+  } catch (error) {
+    if (error instanceof InvalidDateError) {
+      throw new RowError(error.message, 'data_inauguracao');
+    }
+    throw error;
+  }
+
   normalized.combustiveis = splitList(normalized.combustiveis).join(',');
   return normalized;
 }
@@ -208,14 +218,6 @@ function normalizeName(value: string): string {
 
 function splitList(value: string): string[] {
   return value.split(',').map((item) => item.trim()).filter(Boolean);
-}
-
-function parseDate(value: string): string {
-  if (!value) return '';
-  const br = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
-  if (br) return `${br[3]}-${br[2]}-${br[1]}`;
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
-  throw new RowError('Data deve estar em DD/MM/AAAA ou AAAA-MM-DD.', 'data_inauguracao');
 }
 
 function nullable(value: string): string | null { return value || null; }

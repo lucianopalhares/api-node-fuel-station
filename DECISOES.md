@@ -171,3 +171,6 @@ O endpoint de importação limita cada arquivo a 10 MiB por padrão, usando o li
 
 Permitir que na importação somente aceite nomes terminados em `.csv`, sem diferenciar maiúsculas e minúsculas, e os MIME types `text/csv`, `application/csv` e `application/vnd.ms-excel`. Parâmetros adicionais do MIME, como `charset=utf-8`, são removidos antes da comparação. A validação é feita antes do upload para o storage, retornando `INVALID_FILE_EXTENSION` ou `INVALID_FILE_TYPE` quando aplicável.
 
+## Validação e normalização de datas
+
+- Validar data em api/src/modules/shared/validation/DateValidation.ts, a lógica aceita os formatos DD/MM/AAAA, MM/DD/AAAA e AAAA-MM-DD, convertendos para AAAA-MM-DD antes do banco. Datas inválidas são rejeitadas e ambiguidades (dia e mês <= 12) assumem o padrão brasileiro por compatibilidade com docs/example.csv.
