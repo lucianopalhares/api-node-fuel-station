@@ -36,6 +36,7 @@ type ImportHandler = {
       },
     });
     let importPromise: Promise<unknown> | undefined;
+    let importError: unknown;
     let fileFound = false;
 
     busboy.on('error', next);
@@ -49,11 +50,11 @@ type ImportHandler = {
       const filename = info.filename;
       if (filename === undefined) {
         file.resume();
-        importPromise = Promise.reject(new ValidationError(
+        importError = new ValidationError(
           'FILE_NAME_REQUIRED',
           'O arquivo enviado precisa ter um nome.',
           { field: 'file' },
-        ));
+        );
         return;
       }
 
@@ -61,7 +62,7 @@ type ImportHandler = {
         validateCsvUpload(filename, info.mimeType);
       } catch (error) {
         file.resume();
-        importPromise = Promise.reject(error);
+        importError = error;
         return;
       }
 
@@ -75,9 +76,14 @@ type ImportHandler = {
 
     busboy.on('finish', async () => {
       try {
+        if (importError !== undefined) {
+          throw importError;
+        }
+
         if (!importPromise) {
           throw new ValidationError('FILE_REQUIRED', 'O campo file é obrigatório.');
         }
+
         response.status(202).json({ data: await importPromise });
       } catch (error) {
         next(error);

@@ -4,11 +4,11 @@ import { parse } from 'csv-parse';
 import type { Readable } from 'node:stream';
 import { validateCsvHeaders } from '../../shared/validation/CsvImportValidation';
 import { logger } from '../../shared/observability/logger';
-import { S3ObjectStorage } from '../infrastructure/S3ObjectStorage';
+import type { ImportFileStorage } from './ports/ImportFileStorage';
 import type { CsvStationRow } from './StationImportPersister';
 
 export class CsvImportReader {
-  constructor(private readonly storage: S3ObjectStorage) {}
+  constructor(private readonly storage: ImportFileStorage) {}
 
   async read(storageKey: string, importId: string): Promise<AsyncIterable<CsvStationRow>> {
     const source = await this.storage.get(storageKey);

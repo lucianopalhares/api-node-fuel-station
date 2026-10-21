@@ -19,9 +19,10 @@ import { GetImportDetails } from '../modules/import-results/application/GetImpor
 import { ListImports } from '../modules/import-results/application/ListImports';
 import { ImportResultController } from '../modules/import-results/presentation/ImportResultController';
 
-import { QueuedImportCsv } from '../modules/imports/application/QueuedImportCsv';
-import { RabbitMqImportQueue } from '../modules/imports/infrastructure/RabbitMqImportQueue';
+import { ReceiveImportFile } from '../modules/imports/application/ReceiveImportFile';
+import { QueueImportJobPublisher } from '../modules/imports/infrastructure/QueueImportJobPublisher';
 import { S3ObjectStorage } from '../modules/imports/infrastructure/S3ObjectStorage';
+import { RabbitMqQueue } from '../modules/queue/infrastructure/RabbitMqQueue';
 
 import { ListStations } from '../modules/stations/application/use-cases/ListStations';
 import { PostgresStationRepository } from '../modules/stations/infrastructure/postgres/PostgresStationRepository';
@@ -36,8 +37,8 @@ import type { AppConfig } from '../config/env';
 export type AppDependencies = {
   pool: Pool;
   database: PostgresDatabaseClient;
-  importQueue: RabbitMqImportQueue;
-  importController: QueuedImportCsv;
+  importQueue: RabbitMqQueue;
+  importController: ReceiveImportFile;
   maxImportFileSizeBytes: number;
   cityController: CityController;
   responsibleController: ResponsibleController;
@@ -56,7 +57,7 @@ export function createDependencies(config: AppConfig): AppDependencies {
     password: config.database.password,
   });
   const database = new PostgresDatabaseClient(pool);
-  const importQueue = new RabbitMqImportQueue();
+  const importQueue = new RabbitMqQueue();
 
   const cityRepository = new PostgresCityRepository(database);
   const responsibleRepository = new PostgresResponsibleRepository(database);
@@ -66,11 +67,11 @@ export function createDependencies(config: AppConfig): AppDependencies {
     pool,
     database,
     importQueue,
-    importController: new QueuedImportCsv(
+    importController: new ReceiveImportFile(
       database,
       new S3ObjectStorage(config.storageBucket),
       config.storageBucket,
-      importQueue,
+      new QueueImportJobPublisher(importQueue),
       config.maxImportFileSizeBytes,
     ),
     maxImportFileSizeBytes: config.maxImportFileSizeBytes,

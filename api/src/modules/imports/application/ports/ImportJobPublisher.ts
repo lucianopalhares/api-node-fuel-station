@@ -1,10 +1,10 @@
-// definir a porta de aplicação que desacopla os casos de uso do broker escolhido.
+// contrato que o caso de uso de importação precisa.
 
 export type ImportJob = {
   importId: string;
   storageKey: string;
 };
 
-export interface ImportQueue {
+export interface ImportJobPublisher {
   publish(job: ImportJob): Promise<void>;
 }

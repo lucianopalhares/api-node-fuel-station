@@ -1,10 +1,10 @@
 import { DatabaseClient } from '../../shared/infrastructure/database/DatabaseClient';
 import { logger } from '../../shared/observability/logger';
-import { S3ObjectStorage } from '../infrastructure/S3ObjectStorage';
 import { CsvImportReader } from './CsvImportReader';
 import { ImportProgress } from './ImportProgress';
 import { ProcessImportRow } from './ProcessImportRow';
 import { RowError, StationImportPersister, type CsvStationRow } from './StationImportPersister';
+import type { ImportFileStorage } from './ports/ImportFileStorage';
 
 export class ProcessImport {
   private readonly reader: CsvImportReader;
@@ -12,7 +12,7 @@ export class ProcessImport {
 
   constructor(
     private readonly database: DatabaseClient,
-    storage: S3ObjectStorage,
+    storage: ImportFileStorage,
     persister = new StationImportPersister(database),
   ) {
     this.reader = new CsvImportReader(storage);
