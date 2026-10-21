@@ -182,3 +182,7 @@ Permitir que na importação somente aceite nomes terminados em `.csv`, sem dife
 ## Implementando front com Vue 3
 
 - Criando front pra listar postos de combustiveis de forma simples
+
+## Página front pra exibir as importações
+
+- Exibir as importações em uma pagina, com linhas processadas, com erro e sucesso.
