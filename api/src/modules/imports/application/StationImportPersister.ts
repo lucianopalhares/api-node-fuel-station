@@ -37,9 +37,9 @@ export class StationImportPersister {
       );
       if (!city.rows[0]) throw new RowError('A cidade não foi encontrada no catálogo IBGE.', 'municipio');
 
-      const brandId = await ensureCatalog(this.database, 'brands', normalized.bandeira);
+      const brandId = await ensureCatalog(database, 'brands', normalized.bandeira);
       const fuelIds = await Promise.all(
-        splitList(normalized.combustiveis).map((fuel) => ensureCatalog(this.database, 'fuels', fuel)),
+        splitList(normalized.combustiveis).map((fuel) => ensureCatalog(database, 'fuels', fuel)),
       );
       const statusId = await ensureStatus(database, normalized.status);
       const responsibleId = await ensureResponsible(database, normalized);
