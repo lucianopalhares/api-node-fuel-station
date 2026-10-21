@@ -149,3 +149,13 @@ Se qualquer etapa falhar, a transação executa rollback. Assim, a linha inváli
 - CEP com 7 dígitos continua recebendo somente um zero à esquerda.
 - `numero_bicos` e `numero_pistas` passam a rejeitar valores acima de
   `2147483647`, antes da tentativa de gravação no PostgreSQL.
+
+## Exportação dos postos
+
+A exportação de postos consulta a tabela `stations`, em vez de
+depender de uma importação específica. A ordenação é `updated_at DESC, id DESC`
+para priorizar os postos modificados mais recentemente.
+
+O endpoint aceita `limit`, com padrão de 1.000 e máximo de 10.000 registros. A
+consulta usa paginação por chave composta (`updated_at`, `id`) em lotes de 500,
+

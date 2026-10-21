@@ -95,6 +95,17 @@ const importResultController = new ImportResultController(
 );
 app.use('/import-results', createImportResultRouter(importResultController));
 
+import { ExportStations } from './modules/station-exports/application/ExportStations';
+import { PostgresStationExportRepository } from './modules/station-exports/infrastructure/postgres/PostgresStationExportRepository';
+import { StationExportController } from './modules/station-exports/presentation/StationExportController';
+import { createStationExportRouter } from './modules/station-exports/presentation/stationExportRoutes';
+
+const stationExportController = new StationExportController(
+  new ExportStations(new PostgresStationExportRepository(database)),
+);
+
+app.use('/stations', createStationExportRouter(stationExportController));
+
 import { ExportImport } from './modules/exports/application/ExportImport';
 import { PostgresImportExportRepository } from './modules/exports/infrastructure/postgres/PostgresImportExportRepository';
 import { ExportController } from './modules/exports/presentation/ExportController';

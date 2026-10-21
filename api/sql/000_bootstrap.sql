@@ -17,4 +17,5 @@
 \ir migrations/012_import_file_checksum_unique.sql
 \ir migrations/013_import_storage.sql
 \ir migrations/014_import_queue.sql
+\ir migrations/017_station_updated_at_export_index.sql
 
