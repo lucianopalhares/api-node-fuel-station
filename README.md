@@ -1,99 +1,137 @@
 # Planilha de Postos
 
-## Sobre
+Aplicação para importar, consultar e exportar postos de combustível em CSV.
 
-Aplicação para importar, consultar e exportar dados de postos de combustível via planilhas CSV. Os dados importados ficam armazenados no banco de dados PostgreSQL e podem ser exportados novamente em um arquivo compatível.
+## Stack principal
 
-## Stack
+- Node.js `22.23.2`;
+- Backend em Express e TypeScript;
+- PostgreSQL acessado pelo pacote `pg`;
+- Frontend em Vue `3.5.22`;
+- Interface com Vuetify `3.9.5`.
 
-API em Node.js `22.23.2`, Express e TypeScript. O PostgreSQL é acessado com `pg`.
+## Pré-requisitos
 
-## Executar migrations e seeders
+- Docker e Docker Compose;
+- Git;
+- Node.js 22 ou superior, caso queira executar os serviços fora do Docker.
 
-Copie as variáveis de ambiente e construa a imagem da API:
+## Iniciar do zero
+
+Na raiz do projeto, execute:
 
 ```sh
 cp .env.example .env
-docker compose build api
+docker compose up -d --build
 ```
 
-Em seguida, inicie somente o PostgreSQL:
-
-```sh
-docker compose up -d db
-```
-
-- API: <http://localhost:3261>
-- Healthcheck da API e do banco: <http://localhost:3261/health>
-- PostgreSQL: porta `5418` no host (porta `5432` no container)
-
-Depois que o banco estiver disponível, execute os comandos npm dentro do
-container da API:
+Depois que os containers estiverem em execução, prepare o banco:
 
 ```sh
 docker compose run --rm api npm run db:migrate
 docker compose run --rm api npm run db:seed:production
+```
+
+Para carregar um registro de demonstração, opcionalmente execute:
+
+```sh
 docker compose run --rm api npm run db:seed:fixtures
-docker compose up -d api
 ```
 
-O comando `db:seed:fixtures` deve ser usado somente em desenvolvimento e
-testes. Ele cria uma importação concluída, um posto e suas relações. O arquivo
-`seeders/fixtures/one-station.csv` continua disponível para testar o endpoint
-real de importação e não deve ser usado em produção.
+O fixture é destinado apenas a desenvolvimento e testes. Para testar a importação real, use um dos arquivos CSV documentados abaixo.
 
+## Planilha modelo
 
-O Compose inicia apenas a API e o banco. Os dados do PostgreSQL ficam no volume `postgres_data`.
+O arquivo modelo, sem dados preenchidos, está disponível em [`docs/csv-example.csv`](docs/csv-example.csv). Use-o como referência para criar novos arquivos.
 
-Parar os containers sem apagar os dados:
+Para testar a importação com várias linhas já preenchidas, use [`docs/csv-with-data.csv`](docs/csv-with-data.csv).
+
+O arquivo deve manter:
+
+- o delimitador `;`;
+- o header original;
+- a ordem das colunas;
+- a lista de combustíveis separada por vírgulas dentro do campo `combustiveis`.
+
+### Pela interface
+
+1. Acesse <http://localhost:5173/stations>.
+2. Clique em **Importar postos**.
+3. Selecione `docs/csv-with-data.csv` ou `docs/csv-example.csv`.
+4. Envie o arquivo e acompanhe o resultado do processamento.
+
+### Pela API
+
+Na raiz do projeto, execute:
 
 ```sh
-docker compose down
+curl -i -F file=@docs/csv-with-data.csv http://localhost:3261/imports
 ```
 
-Remover também o volume e os dados do banco:
+## Acessos locais
 
-```sh
-docker compose down -v
-```
+| Serviço | Endereço |
+| --- | --- |
+| Aplicação | <http://localhost:5173> |
+| API | <http://localhost:3261> |
+| Healthcheck | <http://localhost:3261/health> |
+| Logs (Dozzle) | <http://localhost:9999> |
+| RabbitMQ | <http://localhost:15673> |
+| MinIO | <http://localhost:9001> |
 
-## Observabilidade
-
-Use o Dozzle em `http://localhost:9999` para ver os logs da API e do worker em tempo real. Ele ajuda a ver erros de requisição e falhas no processamento.
-
-Use o painel RabbitMQ em `http://localhost:15673` para acompanhar a fila `imports`, mensagens pendentes, consumidores ativos e a fila de erros `imports.dlq`. Permite verificar se a importação foi publicada, processada ou encaminhada para erro.
-
-As credenciais do RabbitMQ são `ipdv/ipdv`.
-
-### Endereços
-
-```text
-API:       http://localhost:3261
-Dozzle:    http://localhost:9999
-RabbitMQ:  http://localhost:15673
-```
-
-RabbitMQ:
+Credenciais do RabbitMQ:
 
 ```text
 usuário: ipdv
-senha:   ipdv
+senha: ipdv
 ```
 
-## Testar importação
+## Acompanhar o processamento
 
-```sh
-curl -i -F file=@docs/example.csv http://localhost:3261/imports
-```
-
-A resposta esperada é `202 Accepted` com status `queued`.
-
-Para acompanhar o processamento:
+A API retorna `202 Accepted` quando o arquivo é colocado na fila. O processamento pode ser acompanhado na aplicação, no Dozzle ou com:
 
 ```sh
 docker compose logs -f api worker rabbitmq
 ```
 
-No RabbitMQ, verifique as filas `imports` e `imports.dlq`. No Dozzle, consulte os logs da API e do worker.
+Os arquivos devem manter o delimitador `;`, o header original e a ordem das colunas. O campo `combustiveis` usa vírgulas para separar os combustíveis.
 
+## Parar o projeto
 
+Para parar os containers e preservar os dados:
+
+```sh
+docker compose down
+```
+
+Para parar e remover também os volumes do banco, RabbitMQ, MinIO e logs:
+
+```sh
+docker compose down -v
+```
+
+## Screenshots
+
+### Lista de importações
+
+![Página de importações](assets/import-list-page.png)
+
+### Modal de importação
+
+![Modal de importação](assets/import-modal.png)
+
+### Detalhes da importação
+
+![Detalhes da importação](assets/detail-import-list.png)
+
+### Lista de postos
+
+![Página de postos](assets/stations-page.png)
+
+### Modal de exportação
+
+![Modal de exportação](assets/export-modal.png)
+
+### Página de logs
+
+![Página de logs](assets/logs-page.png)
