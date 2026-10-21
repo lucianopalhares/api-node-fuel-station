@@ -38,10 +38,11 @@ export function hasExactDigits(value: string | null | undefined, length: number)
   return normalizeDigits(value).length === length;
 }
 
-export function isValidCpf(value: string): boolean {
+export function isValidCpf(value: string, validateCheckDigits = false): boolean {
   const digits = normalizeDigits(value);
 
   if (digits.length !== 11 || /^([0-9])\1{10}$/.test(digits)) return false;
+  if (!validateCheckDigits) return true;
 
   const calculateDigit = (length: number): number => {
     const sum = digits
@@ -56,10 +57,11 @@ export function isValidCpf(value: string): boolean {
     && calculateDigit(10) === Number(digits[10]);
 }
 
-export function isValidCnpj(value: string): boolean {
+export function isValidCnpj(value: string, validateCheckDigits = false): boolean {
   const digits = normalizeDigits(value);
 
   if (digits.length !== 14 || /^([0-9])\1{13}$/.test(digits)) return false;
+  if (!validateCheckDigits) return true;
 
   const calculateDigit = (length: number): number => {
     const weights = length === 12
@@ -75,4 +77,27 @@ export function isValidCnpj(value: string): boolean {
 
   return calculateDigit(12) === Number(digits[12])
     && calculateDigit(13) === Number(digits[13]);
+}
+
+export function normalizeCnpj(value: string | null | undefined): string {
+  const text = value?.trim().replace(/\s+/g, '') ?? '';
+  const scientific = /^([+]?)(\d+)(?:[.,](\d+))?[eE]\+?(\d+)$/.exec(text);
+
+  if (!scientific) return normalizeDigits(text);
+
+  const [, , integerPart, fractionPart = '', exponentText] = scientific;
+  const exponent = Number(exponentText);
+  const significantDigits = `${integerPart}${fractionPart}`;
+  const zeroCount = exponent - fractionPart.length;
+
+  if (
+    !Number.isSafeInteger(exponent)
+    || exponent < 0
+    || exponent > 1000
+    || zeroCount < 0
+  ) {
+    return normalizeDigits(text);
+  }
+
+  return `${significantDigits}${'0'.repeat(zeroCount)}`;
 }

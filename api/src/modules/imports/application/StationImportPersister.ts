@@ -6,6 +6,7 @@ import {
   isValidCnpj,
   isValidCpf,
   isValidEmail,
+  normalizeCnpj,
 } from '../../shared/validation/InputValidation';
 
 export type CsvStationRow = Record<string, string>;
@@ -111,7 +112,7 @@ function normalizeRow(row: CsvStationRow): CsvStationRow {
   const normalized = Object.fromEntries(
     Object.entries(row).map(([key, value]) => [key, value?.trim().replace(/\s+/g, ' ') ?? '']),
   );
-  normalized.cnpj = normalizeDocument(normalized.cnpj);
+  normalized.cnpj = normalizeCnpj(normalized.cnpj);
   normalized.cpf_responsavel = normalized.cpf_responsavel.replace(/\D/g, '');
   normalized.cep = normalized.cep.replace(/\D/g, '');
   normalized.uf = normalized.uf.toUpperCase();
@@ -187,10 +188,6 @@ async function ensureResponsible(database: DatabaseClient, row: CsvStationRow): 
     [row.cpf_responsavel, nullable(row.nome_responsavel), nullable(row.email_responsavel), position.rows[0].id],
   );
   return responsible.rows[0].id;
-}
-
-function normalizeDocument(value: string): string {
-  return value.replace(/\D/g, '');
 }
 
 function normalizeName(value: string): string {
