@@ -3,13 +3,23 @@ import { once } from 'node:events';
 import { logger } from '../../shared/observability/logger';
 import { createCsvHeader, serializeCsvRecord } from '../../shared/utils/CsvExportUtils';
 import { ExportImport } from '../application/ExportImport';
+import { ValidationError } from '../../shared/errors/ValidationError';
 
 export class ExportController {
   constructor(private readonly exportImport: ExportImport) {}
 
   async download(request: Request, response: Response): Promise<void> {
-    const importId = request.params.importId;
+    const rawImportId = request.params.importId;
+    if (typeof rawImportId !== 'string') {
+      throw new ValidationError(
+        'INVALID_IMPORT_ID',
+        'O identificador da importação é inválido.',
+        { field: 'importId' },
+      );
+    }
+    const importId = rawImportId;
     const document = await this.exportImport.execute(importId);
+
     let exportedRows = 0;
     let bytesWritten = 0;
     const startedAt = Date.now();

@@ -1,10 +1,10 @@
 // publicar tarefas para o worker de importação.
 
-import amqp, { type ConfirmChannel, type Connection } from 'amqplib';
+import amqp, { type ChannelModel, type ConfirmChannel } from 'amqplib';
 import type { ImportJob, ImportQueue } from '../application/ports/ImportQueue';
 
 export class RabbitMqImportQueue implements ImportQueue {
-  private connection?: Connection;
+  private connection?: ChannelModel;
   private channel?: ConfirmChannel;
 
   constructor(
@@ -29,16 +29,18 @@ export class RabbitMqImportQueue implements ImportQueue {
   private async getChannel(): Promise<ConfirmChannel> {
     if (this.channel) return this.channel;
 
-    this.connection = await amqp.connect(this.url);
-    this.channel = await this.connection.createConfirmChannel();
-    await this.channel.assertQueue(this.queueName, {
+    const connection = await amqp.connect(this.url);
+    const channel = await connection.createConfirmChannel();
+    this.connection = connection;
+    this.channel = channel;
+    await channel.assertQueue(this.queueName, {
       durable: true,
       arguments: {
         'x-dead-letter-exchange': '',
         'x-dead-letter-routing-key': `${this.queueName}.dlq`,
       },
     });
-    await this.channel.assertQueue(`${this.queueName}.dlq`, { durable: true });
-    return this.channel;
+    await channel.assertQueue(`${this.queueName}.dlq`, { durable: true });
+    return channel;
   }
 }

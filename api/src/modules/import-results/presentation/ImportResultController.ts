@@ -23,12 +23,23 @@ export class ImportResultController {
 
     response.json({
       data: await this.getImportDetails.execute({
-        importId: request.params.importId,
+        importId: this.parseRouteImportId(request.params.importId),
         page,
         limit,
         status,
       }),
     });
+  }
+
+  private parseRouteImportId(value: string | string[]): string {
+    if (typeof value !== 'string') {
+      throw new ValidationError(
+        'INVALID_IMPORT_ID',
+        'O identificador da importação é inválido.',
+        { field: 'importId' },
+      );
+    }
+    return value;
   }
 
   private parsePositiveInteger(value: unknown, field: string, fallback: number, maximum: number): number {

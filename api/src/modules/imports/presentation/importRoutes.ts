@@ -36,8 +36,19 @@ export function createImportRouter(importHandler: ImportHandler): Router {
         return;
       }
       fileFound = true;
+      const filename = info.filename;
+      if (filename === undefined) {
+        file.resume();
+        importPromise = Promise.reject(new ValidationError(
+          'FILE_NAME_REQUIRED',
+          'O arquivo enviado precisa ter um nome.',
+          { field: 'file' },
+        ));
+        return;
+      }
+
       importPromise = importHandler.execute({
-        filename: info.filename,
+        filename,
         contentType: info.mimeType,
         stream: file,
       });
