@@ -133,3 +133,7 @@ Além de conferir a quantidade de dígitos, a importação agora valida os dígi
 Cada linha do CSV agora é processada em uma transação PostgreSQL própria. A criação ou atualização do posto, dos responsáveis e catálogos, a remoção e inserção dos combustíveis e o registro em `import_rows` são confirmados juntos.
 
 Se qualquer etapa falhar, a transação executa rollback. Assim, a linha inválida não deixa posto, combustível ou relacionamento parcialmente gravado; o fluxo existente registra a linha como `invalid` depois da reversão.
+
+## Validação de CPF e CNPJ
+
+- Levando em  consideração a planilha de modelo que possui cnpj e cpfs invalidos, os metodos de validar cpf e cnpj tem opcao default para nao validar se cpf e cnpj sao verdadeiros, apenas a quantidade de digitos.
