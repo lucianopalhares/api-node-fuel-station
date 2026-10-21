@@ -137,3 +137,8 @@ Se qualquer etapa falhar, a transação executa rollback. Assim, a linha inváli
 ## Validação de CPF e CNPJ
 
 - Levando em  consideração a planilha de modelo que possui cnpj e cpfs invalidos, os metodos de validar cpf e cnpj tem opcao default para nao validar se cpf e cnpj sao verdadeiros, apenas a quantidade de digitos.
+
+## Normalizar cep corretamente
+
+- Cep com 7 digitos deve considerar que esta ignorando o zero a esquerda, portante é considerado valido
+

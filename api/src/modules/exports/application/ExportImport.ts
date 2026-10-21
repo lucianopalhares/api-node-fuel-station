@@ -6,6 +6,8 @@ import type {
   ImportExportRow,
 } from '../domain/repositories/ImportExportRepository';
 
+import { normalizeCep } from '../../shared/validation/InputValidation';
+
 const EXPORT_BATCH_SIZE = 500;
 
 export type ImportExportDocument = {
@@ -69,7 +71,12 @@ export class ExportImport {
   }
 
   private toExportRecord(row: ImportExportRow): CsvExportRecord {
-    return row.rawData;
+    const record = row.rawData;
+    const cep = typeof record.cep === 'string'
+      ? record.cep
+      : String(record.cep ?? '');
+
+    return { ...record, cep: normalizeCep(cep) };
   }
 }
 

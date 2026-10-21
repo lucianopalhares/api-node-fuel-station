@@ -7,6 +7,7 @@ import {
   isValidCpf,
   isValidEmail,
   normalizeCnpj,
+  normalizeCep,
 } from '../../shared/validation/InputValidation';
 
 export type CsvStationRow = Record<string, string>;
@@ -114,7 +115,7 @@ function normalizeRow(row: CsvStationRow): CsvStationRow {
   );
   normalized.cnpj = normalizeCnpj(normalized.cnpj);
   normalized.cpf_responsavel = normalized.cpf_responsavel.replace(/\D/g, '');
-  normalized.cep = normalized.cep.replace(/\D/g, '');
+  normalized.cep = normalizeCep(normalized.cep);
   normalized.uf = normalized.uf.toUpperCase();
   normalized.email_responsavel = normalized.email_responsavel.toLowerCase();
   normalized.data_inauguracao = parseDate(normalized.data_inauguracao);

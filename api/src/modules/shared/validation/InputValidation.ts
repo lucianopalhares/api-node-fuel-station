@@ -101,3 +101,9 @@ export function normalizeCnpj(value: string | null | undefined): string {
 
   return `${significantDigits}${'0'.repeat(zeroCount)}`;
 }
+
+export function normalizeCep(value: string | null | undefined): string {
+  const digits = normalizeDigits(value);
+  if (!digits) return '';
+  return digits.length === 7 ? `0${digits}` : digits;
+}
