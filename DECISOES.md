@@ -142,3 +142,10 @@ Se qualquer etapa falhar, a transação executa rollback. Assim, a linha inváli
 
 - Cep com 7 digitos deve considerar que esta ignorando o zero a esquerda, portante é considerado valido
 
+## Algumas correções de validação
+
+- CEP, CPF e CNPJ com letras ou caracteres fora das máscaras permitidas passam
+  a ser rejeitados, em vez de terem caracteres removidos como aceitar letras por exemplo.
+- CEP com 7 dígitos continua recebendo somente um zero à esquerda.
+- `numero_bicos` e `numero_pistas` passam a rejeitar valores acima de
+  `2147483647`, antes da tentativa de gravação no PostgreSQL.

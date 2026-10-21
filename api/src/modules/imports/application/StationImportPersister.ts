@@ -113,6 +113,11 @@ function normalizeRow(row: CsvStationRow): CsvStationRow {
   const normalized = Object.fromEntries(
     Object.entries(row).map(([key, value]) => [key, value?.trim().replace(/\s+/g, ' ') ?? '']),
   );
+
+  assertAllowedCharacters(normalized.cnpj, /^[\d\s.,/+Ee-]+$/, 'cnpj', 'CNPJ contém caracteres inválidos.');
+  assertAllowedCharacters(normalized.cpf_responsavel, /^[\d\s.-]+$/, 'cpf_responsavel', 'CPF contém caracteres inválidos.');
+  assertAllowedCharacters(normalized.cep, /^[\d\s-]+$/, 'cep', 'CEP contém caracteres inválidos.');
+
   normalized.cnpj = normalizeCnpj(normalized.cnpj);
   normalized.cpf_responsavel = normalized.cpf_responsavel.replace(/\D/g, '');
   normalized.cep = normalizeCep(normalized.cep);
@@ -121,6 +126,10 @@ function normalizeRow(row: CsvStationRow): CsvStationRow {
   normalized.data_inauguracao = parseDate(normalized.data_inauguracao);
   normalized.combustiveis = splitList(normalized.combustiveis).join(',');
   return normalized;
+}
+
+function assertAllowedCharacters(value: string, pattern: RegExp, field: string, message: string): void {
+  if (value && !pattern.test(value)) throw new RowError(message, field);
 }
 
 function validateRow(row: CsvStationRow): void {
@@ -148,9 +157,11 @@ function validateRow(row: CsvStationRow): void {
   }
   if (!row.status) throw new RowError('Status é obrigatório.', 'status');
 
+  const maxPostgresInteger = 2147483647n;
   for (const field of ['numero_bicos', 'numero_pistas']) {
-    if (row[field] && !/^\d+$/.test(row[field])) {
-      throw new RowError('O valor deve ser um inteiro não negativo.', field);
+    if (!row[field]) continue;
+    if (!/^\d+$/.test(row[field]) || BigInt(row[field]) > maxPostgresInteger) {
+      throw new RowError('O valor deve ser um inteiro não negativo até 2147483647.', field);
     }
   }
 }
