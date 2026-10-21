@@ -174,3 +174,7 @@ Permitir que na importação somente aceite nomes terminados em `.csv`, sem dife
 ## Validação e normalização de datas
 
 - Validar data em api/src/modules/shared/validation/DateValidation.ts, a lógica aceita os formatos DD/MM/AAAA, MM/DD/AAAA e AAAA-MM-DD, convertendos para AAAA-MM-DD antes do banco. Datas inválidas são rejeitadas e ambiguidades (dia e mês <= 12) assumem o padrão brasileiro por compatibilidade com docs/example.csv.
+
+## Separar modulos de importar e de fila
+
+- O módulo de imports possuia importação e fila juntos, foi dividido criando outro modulo de filas e o modulo de importação permanece. Cada um com responsabilidade diferente.
