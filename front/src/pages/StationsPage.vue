@@ -48,6 +48,9 @@
         <v-card-title>Importar postos</v-card-title>
         <v-card-text>
           <p class="text-body-2 mb-4">Selecione um arquivo CSV no formato padrão de postos. O arquivo será validado e processado pela API.</p>
+          <p class="text-body-2 mb-4">
+            Se preferir, <a href="/csv-example.csv" download="csv-example.csv">baixe a planilha de modelo</a>.
+          </p>
           <v-file-input
             v-model="importFile"
             label="Arquivo CSV"
