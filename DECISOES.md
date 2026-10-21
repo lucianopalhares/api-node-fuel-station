@@ -186,3 +186,7 @@ Permitir que na importação somente aceite nomes terminados em `.csv`, sem dife
 ## Página front pra exibir as importações
 
 - Exibir as importações em uma pagina, com linhas processadas, com erro e sucesso.
+
+## Permitir no front exportar postos
+
+- Na pagina de postos /stations. Permitir um botão pra exportar postos com padrão de 100 mas podendo alterar a quantidade. São exportados por ordem decrescente de data de alteração.
