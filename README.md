@@ -2,6 +2,8 @@
 
 Aplicação para importar, consultar e exportar postos de combustível em CSV.
 
+As decisões técnicas e de produto mais importantes estão documentadas em [`DECISOES.md`](DECISOES.md).
+
 ## Stack principal
 
 - Node.js `22.23.2`;
