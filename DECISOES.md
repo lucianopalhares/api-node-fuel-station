@@ -167,3 +167,7 @@ Adicionar paginação de postos de combustiveis e limite por pagina.
 
 O endpoint de importação limita cada arquivo a 10 MiB por padrão, usando o limite `fileSize` do Busboy. O valor pode ser alterado por `MAX_IMPORT_FILE_SIZE_BYTES`. Quando o stream é truncado, a API responde HTTP 413 com o código `FILE_TOO_LARGE`, marca a importação como erro e não publica a mensagem no RabbitMQ e tenta remover o objeto parcial do storage. 
 
+## Validação de extensão e tipo MIME do CSV
+
+Permitir que na importação somente aceite nomes terminados em `.csv`, sem diferenciar maiúsculas e minúsculas, e os MIME types `text/csv`, `application/csv` e `application/vnd.ms-excel`. Parâmetros adicionais do MIME, como `charset=utf-8`, são removidos antes da comparação. A validação é feita antes do upload para o storage, retornando `INVALID_FILE_EXTENSION` ou `INVALID_FILE_TYPE` quando aplicável.
+

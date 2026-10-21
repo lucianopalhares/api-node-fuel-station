@@ -2,6 +2,7 @@ import { Request, Response, Router } from 'express';
 import Busboy from 'busboy';
 import { ValidationError } from '../../shared/errors/ValidationError';
 import type { Readable } from 'node:stream';
+import { validateCsvUpload } from '../../shared/validation/CsvImportValidation';
 
 type ImportHandler = {
   execute(input: {
@@ -56,11 +57,20 @@ type ImportHandler = {
         return;
       }
 
+      try {
+        validateCsvUpload(filename, info.mimeType);
+      } catch (error) {
+        file.resume();
+        importPromise = Promise.reject(error);
+        return;
+      }
+
       importPromise = importHandler.execute({
         filename,
         contentType: info.mimeType,
         stream: file,
       });
+
     });
 
     busboy.on('finish', async () => {
