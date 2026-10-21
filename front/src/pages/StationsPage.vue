@@ -105,9 +105,11 @@ async function exportStationsCsv() {
   }
 }
 
-function handleImportFileChange(file: File | null) {
+function handleImportFileChange(file: File | File[] | null) {
+  const selectedFile = Array.isArray(file) ? file[0] ?? null : file;
+  importFile.value = selectedFile;
   importError.value = '';
-  if (file) importSuccess.value = '';
+  if (selectedFile) importSuccess.value = '';
 }
 
 function openImportDialog() {
