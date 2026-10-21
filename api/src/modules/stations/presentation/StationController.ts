@@ -12,6 +12,8 @@ export class StationController {
     const page = parseOptionalInteger(request.query.page);
     const limit = parseOptionalInteger(request.query.limit);
 
+    const search = typeof request.query.search === 'string' ? request.query.search.trim() : undefined;
+
     if (hasPage && (page === undefined || page < 1)) {
       throw new ValidationError(
         'INVALID_PAGE',
@@ -28,6 +30,6 @@ export class StationController {
       );
     }
 
-    response.json(await this.listStations.execute({ page, limit }));
+    response.json(await this.listStations.execute({ page, limit, search }));
   }
 }

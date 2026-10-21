@@ -178,3 +178,7 @@ Permitir que na importação somente aceite nomes terminados em `.csv`, sem dife
 ## Separar modulos de importar e de fila
 
 - O módulo de imports possuia importação e fila juntos, foi dividido criando outro modulo de filas e o modulo de importação permanece. Cada um com responsabilidade diferente.
+
+## Implementando front com Vue 3
+
+- Criando front pra listar postos de combustiveis de forma simples

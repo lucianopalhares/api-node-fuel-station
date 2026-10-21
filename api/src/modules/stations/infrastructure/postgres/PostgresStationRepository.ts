@@ -33,7 +33,8 @@ type StationRow = {
 export class PostgresStationRepository implements StationRepository {
   constructor(private readonly database: DatabaseClient) {}
 
-  async list(limit: number, offset: number): Promise<Station[]> {
+  async list(limit: number, offset: number, search?: string): Promise<Station[]> {
+    const searchPattern = search ? `%${search}%` : null;
     const result = await this.database.query<StationRow>(
       `SELECT s.id,
               s.cnpj,
@@ -54,28 +55,32 @@ export class PostgresStationRepository implements StationRepository {
               r.name AS responsible_name,
               r.email AS responsible_email,
               rp.name AS responsible_position,
-              COALESCE(
-                ARRAY_AGG(f.name ORDER BY f.name) FILTER (WHERE f.id IS NOT NULL),
-                ARRAY[]::VARCHAR[]
-              ) AS fuels,
+              COALESCE(ARRAY_AGG(f.name ORDER BY f.name) FILTER (WHERE f.id IS NOT NULL), ARRAY[]::VARCHAR[]) AS fuels,
               ss.name AS status,
               s.data_inauguracao::TEXT AS opening_date,
               s.numero_bicos AS pump_count,
               s.numero_pistas AS lane_count,
               s.observacoes AS notes
-         FROM stations s
-         JOIN station_statuses ss ON ss.id = s.status_id
-         LEFT JOIN brands b ON b.id = s.brand_id
-         JOIN cities c ON c.ibge_code = s.city_ibge_code
-         JOIN states st ON st.id = c.state_id
-         LEFT JOIN responsibles r ON r.id = s.responsible_id
-         LEFT JOIN responsible_positions rp ON rp.id = r.position_id
-         LEFT JOIN station_fuels sf ON sf.station_id = s.id
-         LEFT JOIN fuels f ON f.id = sf.fuel_id
+        FROM stations s
+        JOIN station_statuses ss ON ss.id = s.status_id
+        LEFT JOIN brands b ON b.id = s.brand_id
+        JOIN cities c ON c.ibge_code = s.city_ibge_code
+        JOIN states st ON st.id = c.state_id
+        LEFT JOIN responsibles r ON r.id = s.responsible_id
+        LEFT JOIN responsible_positions rp ON rp.id = r.position_id
+        LEFT JOIN station_fuels sf ON sf.station_id = s.id
+        LEFT JOIN fuels f ON f.id = sf.fuel_id
+        WHERE ($1::TEXT IS NULL
+          OR s.cnpj ILIKE $1
+          OR s.nome_posto ILIKE $1
+          OR s.nome_fantasia ILIKE $1
+          OR b.name ILIKE $1
+          OR c.name ILIKE $1
+          OR st.abbreviation ILIKE $1)
         GROUP BY s.id, b.id, c.ibge_code, st.abbreviation, r.id, rp.id, ss.id
         ORDER BY s.nome_fantasia NULLS LAST, s.nome_posto, s.cnpj
-        LIMIT $1`,
-      [limit],
+        LIMIT $2 OFFSET $3`,
+      [searchPattern, limit, offset],
     );
 
     return result.rows.map(toStation);
