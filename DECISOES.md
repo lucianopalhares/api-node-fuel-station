@@ -195,3 +195,7 @@ Permitir que na importação somente aceite nomes terminados em `.csv`, sem dife
 
 - As datas usam `stations.updated_at` e a última linha `import_rows` com status `imported` ou `updated`.
 - O link da importação usa `importId` na URL exibindo a data da ultima importação em cada linha de posto, permitindo abrir a importação especifica para visualizar os detalhes da importação daquele posto.
+
+## Baixar planilha so com linhas de erro
+
+- Na tela de importações, as importações que ocorreram erros parciais ou erros. Ter um botão para baixar uma nova planilha com somente as linhas de erro. Assim permite corrigir as linhas e tentar uma nova importação.
