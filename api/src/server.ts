@@ -4,7 +4,6 @@ import { Pool } from 'pg';
 import { AppError } from './modules/shared/errors/AppError';
 import { errorHandler } from './modules/shared/errors/errorHandler';
 
-import { ImportCsv } from './modules/imports/application/ImportCsv';
 import { S3ObjectStorage } from './modules/imports/infrastructure/S3ObjectStorage';
 import { createImportRouter } from './modules/imports/presentation/importRoutes';
 
