@@ -65,3 +65,7 @@ export async function getImportDetails(importId: string, page: number, limit: nu
   const body = await response.json() as ImportDetailsResponse;
   return body.data;
 }
+
+export function getImportErrorExportUrl(importId: string): string {
+  return `/api/imports/${encodeURIComponent(importId)}/errors/export`;
+}

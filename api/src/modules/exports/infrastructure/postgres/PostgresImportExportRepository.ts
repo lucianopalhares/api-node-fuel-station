@@ -30,16 +30,22 @@ export class PostgresImportExportRepository implements ImportExportRepository {
     return row ? { id: row.id, filename: row.filename } : null;
   }
 
-  async listRows(importId: string, afterRowNumber: number, limit: number): Promise<ImportExportRow[]> {
+  async listRows(
+    importId: string,
+    afterRowNumber: number,
+    limit: number,
+    status: 'successful' | 'invalid' = 'successful',
+  ): Promise<ImportExportRow[]> {
+    const statuses = status === 'invalid' ? ['invalid'] : ['imported', 'updated'];
     const result = await this.database.query<ImportExportRowData>(
       `SELECT row_number, raw_data
          FROM import_rows
         WHERE import_id = $1
           AND row_number > $2
-          AND status IN ('imported', 'updated')
+          AND status = ANY($4::text[])
         ORDER BY row_number ASC
         LIMIT $3`,
-      [importId, afterRowNumber, limit],
+      [importId, afterRowNumber, limit, statuses],
     );
 
     return result.rows.map((row) => ({

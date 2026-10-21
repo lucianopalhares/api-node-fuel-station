@@ -3,12 +3,17 @@ import { once } from 'node:events';
 import { logger } from '../../shared/observability/logger';
 import { createCsvHeader, serializeCsvRecord } from '../../shared/utils/CsvExportUtils';
 import { ExportImport } from '../application/ExportImport';
+import type { ImportExportRowStatus } from '../domain/repositories/ImportExportRepository';
 import { ValidationError } from '../../shared/errors/ValidationError';
 
 export class ExportController {
   constructor(private readonly exportImport: ExportImport) {}
 
-  async download(request: Request, response: Response): Promise<void> {
+  async download(
+    request: Request,
+    response: Response,
+    status: ImportExportRowStatus = 'successful',
+  ): Promise<void> {
     const rawImportId = request.params.importId;
     if (typeof rawImportId !== 'string') {
       throw new ValidationError(
@@ -18,7 +23,7 @@ export class ExportController {
       );
     }
     const importId = rawImportId;
-    const document = await this.exportImport.execute(importId);
+    const document = await this.exportImport.execute(importId, status);
 
     let exportedRows = 0;
     let bytesWritten = 0;

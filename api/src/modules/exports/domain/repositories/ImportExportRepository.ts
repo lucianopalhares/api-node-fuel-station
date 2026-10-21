@@ -10,7 +10,14 @@ export type ImportExportRow = {
   rawData: CsvExportRecord;
 };
 
+export type ImportExportRowStatus = 'successful' | 'invalid';
+
 export interface ImportExportRepository {
   findMetadata(importId: string): Promise<ImportExportMetadata | null>;
-  listRows(importId: string, afterRowNumber: number, limit: number): Promise<ImportExportRow[]>;
+  listRows(
+    importId: string,
+    afterRowNumber: number,
+    limit: number,
+    status?: ImportExportRowStatus,
+  ): Promise<ImportExportRow[]>;
 }

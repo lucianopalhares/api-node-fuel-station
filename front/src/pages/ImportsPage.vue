@@ -9,13 +9,35 @@
 
     <v-card v-if="!loading || imports.length">
       <v-table>
-        <thead><tr><th>Arquivo</th><th>Status</th><th>Total processadas</th><th>Criadas</th><th>Atualizadas</th><th>Com erro</th><th>Iniciada em</th><th /></tr></thead>
+        <thead>
+          <tr>
+            <th>Arquivo</th><th>Status</th><th>Total processadas</th><th>Criadas</th><th>Atualizadas</th><th>Com erro</th><th>Iniciada em</th>
+            <th class="text-right actions-header">
+              <span class="text-caption text-medium-emphasis font-weight-regular">
+                Baixar erros gera a mesma planilha somente com as <br>linhas com erro para corrigir e tentar novamente.
+              </span>
+            </th>
+          </tr>  
+        </thead>
         <tbody>
           <tr v-for="item in imports" :key="item.id">
             <td class="font-weight-medium">{{ item.filename }}</td>
             <td><v-chip size="small" :color="statusColor(item.status)" variant="tonal">{{ statusLabel(item.status) }}</v-chip></td>
             <td>{{ item.totalRows }}</td><td class="text-success">{{ item.importedRows }}</td><td class="text-info">{{ item.updatedRows }}</td><td class="text-error">{{ item.errorRows }}</td>
-            <td>{{ formatDate(item.startedAt) }}</td><td class="text-right"><v-btn size="small" variant="text" @click="openDetails(item)">Ver detalhes</v-btn></td>
+            <td>{{ formatDate(item.startedAt) }}</td>
+            <td class="text-right">
+              <v-btn
+                v-if="item.errorRows > 0"
+                size="small"
+                variant="text"
+                color="error"
+                prepend-icon="mdi-download"
+                :href="getImportErrorExportUrl(item.id)"
+              >
+                Baixar erros
+              </v-btn>
+              <v-btn size="small" variant="text" @click="openDetails(item)">Ver detalhes</v-btn>
+            </td>
           </tr>
           <tr v-if="!imports.length"><td colspan="8" class="text-center py-8">Nenhuma importação encontrada.</td></tr>
         </tbody>
@@ -49,7 +71,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { getImportDetails, getImports } from '../services/imports';
+import { getImportDetails, getImportErrorExportUrl, getImports } from '../services/imports';
 import type { ImportRow, ImportRowStatus, ImportSummary } from '../types/import';
 
 const route = useRoute();
@@ -80,8 +102,25 @@ async function loadDetails(page: number) {
 }
 function metrics(item: ImportSummary) { return [{ label: 'Total processadas', value: item.totalRows, class: '' }, { label: 'Criadas', value: item.importedRows, class: 'text-success' }, { label: 'Atualizadas', value: item.updatedRows, class: 'text-info' }, { label: 'Com erro', value: item.errorRows, class: 'text-error' }]; }
 function formatDate(value: string) { return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)); }
-function statusLabel(value: string) { return ({ queued: 'Na fila', processing: 'Processando', completed: 'Concluída', failed: 'Falhou' }[value] || value); }
-function statusColor(value: string) { return value === 'completed' ? 'success' : value === 'failed' ? 'error' : value === 'processing' ? 'info' : 'warning'; }
+function statusLabel(value: string) {
+  return ({
+    queued: 'Na fila',
+    processing: 'Processando',
+    completed: 'Concluída',
+    completed_with_errors: 'Concluída com erros',
+    failed: 'Falhou',
+  }[value] || value);
+}
+
+function statusColor(value: string) {
+  return value === 'completed'
+    ? 'success'
+    : value === 'completed_with_errors' || value === 'failed'
+      ? 'error'
+      : value === 'processing'
+        ? 'info'
+        : 'warning';
+}
 function rowStatusLabel(value: ImportRowStatus) { return ({ imported: 'Criada', updated: 'Atualizada', skipped: 'Ignorada', invalid: 'Com erro' }[value]); }
 function rowStatusColor(value: ImportRowStatus) { return value === 'imported' ? 'success' : value === 'updated' ? 'info' : value === 'invalid' ? 'error' : 'warning'; }
 watch(() => route.query.importId, () => { void loadImports(); });

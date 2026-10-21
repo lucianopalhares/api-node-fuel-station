@@ -4,6 +4,7 @@ import type { CsvExportRecord } from '../../shared/utils/CsvExportUtils';
 import type {
   ImportExportRepository,
   ImportExportRow,
+  ImportExportRowStatus,
 } from '../domain/repositories/ImportExportRepository';
 
 import { normalizeCep } from '../../shared/validation/InputValidation';
@@ -18,7 +19,7 @@ export type ImportExportDocument = {
 export class ExportImport {
   constructor(private readonly repository: ImportExportRepository) {}
 
-  async execute(importId: string): Promise<ImportExportDocument> {
+  async execute(importId: string, status: ImportExportRowStatus = 'successful'): Promise<ImportExportDocument> {
     const metadata = await this.repository.findMetadata(importId);
     if (!metadata) {
       throw new NotFoundError('IMPORT_NOT_FOUND', 'Importação não encontrada.');
@@ -27,22 +28,23 @@ export class ExportImport {
     logger.info('import.export.started', {
       importId,
       filename: metadata.filename,
+      status,
       batchSize: EXPORT_BATCH_SIZE,
     });
 
     return {
-      filename: buildExportFilename(metadata.filename, importId),
-      rows: this.readRows(importId),
+      filename: buildExportFilename(metadata.filename, importId, status),
+      rows: this.readRows(importId, status),
     };
   }
 
-  private async *readRows(importId: string): AsyncIterable<CsvExportRecord> {
+  private async *readRows(importId: string, status: ImportExportRowStatus): AsyncIterable<CsvExportRecord> {
     let afterRowNumber = 1;
     let batchNumber = 0;
     let exportedRows = 0;
 
     while (true) {
-      const rows = await this.repository.listRows(importId, afterRowNumber, EXPORT_BATCH_SIZE);
+      const rows = await this.repository.listRows(importId, afterRowNumber, EXPORT_BATCH_SIZE, status);
       if (rows.length === 0) break;
 
       batchNumber += 1;
@@ -80,7 +82,12 @@ export class ExportImport {
   }
 }
 
-function buildExportFilename(originalFilename: string, importId: string): string {
+function buildExportFilename(
+  originalFilename: string,
+  importId: string,
+  status: ImportExportRowStatus,
+): string {
   const baseName = originalFilename.replace(/[^a-zA-Z0-9._-]/g, '_');
-  return `export-${importId}-${baseName || 'import.csv'}`;
+  const prefix = status === 'invalid' ? 'linhas-com-erro' : 'export';
+  return `${prefix}-${importId}-${baseName || 'import.csv'}`;
 }
