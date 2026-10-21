@@ -11,7 +11,10 @@ type ImportHandler = {
   }): Promise<unknown>;
 };
 
-export function createImportRouter(importHandler: ImportHandler): Router {
+  export function createImportRouter(
+    importHandler: ImportHandler,
+    maxFileSizeBytes: number,
+  ): Router {
   const router = Router();
 
   router.post('/', (request: Request, response: Response, next) => {
@@ -24,7 +27,13 @@ export function createImportRouter(importHandler: ImportHandler): Router {
       return;
     }
 
-    const busboy = Busboy({ headers: request.headers });
+    const busboy = Busboy({
+      headers: request.headers,
+      limits: {
+        fileSize: maxFileSizeBytes,
+        files: 1,
+      },
+    });
     let importPromise: Promise<unknown> | undefined;
     let fileFound = false;
 

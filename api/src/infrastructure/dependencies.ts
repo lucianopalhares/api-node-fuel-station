@@ -38,6 +38,7 @@ export type AppDependencies = {
   database: PostgresDatabaseClient;
   importQueue: RabbitMqImportQueue;
   importController: QueuedImportCsv;
+  maxImportFileSizeBytes: number;
   cityController: CityController;
   responsibleController: ResponsibleController;
   stationController: StationController;
@@ -70,7 +71,9 @@ export function createDependencies(config: AppConfig): AppDependencies {
       new S3ObjectStorage(config.storageBucket),
       config.storageBucket,
       importQueue,
+      config.maxImportFileSizeBytes,
     ),
+    maxImportFileSizeBytes: config.maxImportFileSizeBytes,
     cityController: new CityController(
       new ListCities(cityRepository),
       new GetCityByIbgeCode(cityRepository),

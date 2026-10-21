@@ -162,3 +162,8 @@ consulta usa paginação por chave composta (`updated_at`, `id`) em lotes de 500
 ## Melhora listar postos
 
 Adicionar paginação de postos de combustiveis e limite por pagina.
+
+### Limite de tamanho do arquivo de importação
+
+O endpoint de importação limita cada arquivo a 10 MiB por padrão, usando o limite `fileSize` do Busboy. O valor pode ser alterado por `MAX_IMPORT_FILE_SIZE_BYTES`. Quando o stream é truncado, a API responde HTTP 413 com o código `FILE_TOO_LARGE`, marca a importação como erro e não publica a mensagem no RabbitMQ e tenta remover o objeto parcial do storage. 
+

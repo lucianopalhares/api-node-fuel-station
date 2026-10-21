@@ -8,7 +8,18 @@ export type AppConfig = {
     password: string;
   };
   storageBucket: string;
+  maxImportFileSizeBytes: number;
 };
+
+const DEFAULT_MAX_IMPORT_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+
+function loadMaxImportFileSizeBytes(): number {
+  const configured = Number(process.env.MAX_IMPORT_FILE_SIZE_BYTES);
+
+  return Number.isSafeInteger(configured) && configured > 0
+    ? configured
+    : DEFAULT_MAX_IMPORT_FILE_SIZE_BYTES;
+}
 
 export function loadConfig(): AppConfig {
   return {
@@ -21,5 +32,6 @@ export function loadConfig(): AppConfig {
       password: process.env.DB_PASSWORD ?? 'ipdv',
     },
     storageBucket: process.env.STORAGE_BUCKET ?? 'imports',
+    maxImportFileSizeBytes: loadMaxImportFileSizeBytes(),
   };
 }

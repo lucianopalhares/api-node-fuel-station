@@ -4,6 +4,7 @@ import {
   HeadBucketCommand,
   PutObjectCommand,
   S3Client,
+  DeleteObjectCommand,
 } from '@aws-sdk/client-s3';
 import { Readable } from 'node:stream';
 import { AppError } from '../../shared/errors/AppError';
@@ -34,6 +35,17 @@ export class S3ObjectStorage {
       }));
     } catch {
       throw new AppError(502, 'STORAGE_WRITE_ERROR', 'Não foi possível armazenar o arquivo no storage.');
+    }
+  }
+
+  async delete(key: string): Promise<void> {
+    try {
+      await this.client.send(new DeleteObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+      }));
+    } catch {
+      throw new AppError(502, 'STORAGE_DELETE_ERROR', 'Não foi possível remover o arquivo parcial do storage.');
     }
   }
 

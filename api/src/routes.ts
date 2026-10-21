@@ -11,7 +11,10 @@ import { createStationRouter } from './modules/stations/presentation/stationRout
 import type { AppDependencies } from './infrastructure/dependencies';
 
 export function registerRoutes(app: Express, dependencies: AppDependencies): void {
-  app.use('/imports', createImportRouter(dependencies.importController));
+  app.use(
+    '/imports',
+    createImportRouter(dependencies.importController, dependencies.maxImportFileSizeBytes),
+  );
   app.use('/cities', createCityRouter(dependencies.cityController));
   app.use('/responsibles', createResponsibleRouter(dependencies.responsibleController));
 
