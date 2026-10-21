@@ -47,8 +47,11 @@ export async function uploadStations(file: File): Promise<ReceivedImport> {
   return body.data;
 }
 
-export async function getImports(limit = 20): Promise<ImportSummary[]> {
-  const response = await fetch(`/api/import-results?limit=${limit}`);
+export async function getImports(limit = 20, importId?: string): Promise<ImportSummary[]> {
+  const params = new URLSearchParams({ limit: String(limit) });
+  if (importId) params.set('importId', importId);
+  const response = await fetch(`/api/import-results?${params}`);
+
   if (!response.ok) await parseError(response, 'Não foi possível carregar as importações.');
   const body = await response.json() as ImportListResponse;
   return body.data;

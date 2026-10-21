@@ -33,14 +33,15 @@ type ImportSummaryRow = {
 export class ListImports {
   constructor(private readonly database: DatabaseClient) {}
 
-  async execute(limit: number): Promise<ImportSummary[]> {
+  async execute(limit: number, importId?: string): Promise<ImportSummary[]> {
     const result = await this.database.query<ImportSummaryRow>(
       `SELECT id, filename, status, total_rows, imported_rows, updated_rows,
               skipped_rows, error_rows, failure_reason, started_at, finished_at
          FROM imports
+        WHERE ($2::BIGINT IS NULL OR id = $2::BIGINT)
         ORDER BY started_at DESC, id DESC
         LIMIT $1`,
-      [limit],
+      [limit, importId || null],
     );
 
     return result.rows.map(mapSummary);

@@ -34,4 +34,6 @@ export type Station = {
   pumpCount: number | null;
   laneCount: number | null;
   notes: string | null;
+  updatedAt: string;
+  lastImport: { id: string; date: string } | null;
 };

@@ -47,9 +47,12 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { getImportDetails, getImports } from '../services/imports';
 import type { ImportRow, ImportRowStatus, ImportSummary } from '../types/import';
+
+const route = useRoute();
 
 const imports = ref<ImportSummary[]>([]); const loading = ref(false); const error = ref('');
 const detailsOpen = ref(false); const detailsLoading = ref(false); const detailsError = ref('');
@@ -59,8 +62,14 @@ const rowStatusOptions = [{ label: 'Criadas', value: 'imported' }, { label: 'Atu
 
 async function loadImports() {
   loading.value = true; error.value = '';
-  try { imports.value = await getImports(); } catch (cause) { error.value = cause instanceof Error ? cause.message : 'Erro inesperado ao carregar as importações.'; } finally { loading.value = false; }
+  try {
+    const importId = typeof route.query.importId === 'string' ? route.query.importId : undefined;
+    imports.value = await getImports(20, importId);
+  } catch (cause) {
+    error.value = cause instanceof Error ? cause.message : 'Erro inesperado ao carregar as importações.';
+  } finally { loading.value = false; }
 }
+
 async function openDetails(item: ImportSummary) { selected.value = item; detailsOpen.value = true; rowStatus.value = null; await loadDetails(1); }
 async function loadDetails(page: number) {
   if (!selected.value) return;
@@ -75,7 +84,8 @@ function statusLabel(value: string) { return ({ queued: 'Na fila', processing: '
 function statusColor(value: string) { return value === 'completed' ? 'success' : value === 'failed' ? 'error' : value === 'processing' ? 'info' : 'warning'; }
 function rowStatusLabel(value: ImportRowStatus) { return ({ imported: 'Criada', updated: 'Atualizada', skipped: 'Ignorada', invalid: 'Com erro' }[value]); }
 function rowStatusColor(value: ImportRowStatus) { return value === 'imported' ? 'success' : value === 'updated' ? 'info' : value === 'invalid' ? 'error' : 'warning'; }
-onMounted(loadImports);
+watch(() => route.query.importId, () => { void loadImports(); });
+onMounted(() => { void loadImports(); });
 </script>
 
 <style scoped>

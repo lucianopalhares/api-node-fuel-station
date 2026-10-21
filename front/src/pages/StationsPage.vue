@@ -14,12 +14,19 @@
       <v-alert v-if="error" type="error" variant="tonal" class="mx-4 mb-4">{{ error }}</v-alert>
       <v-progress-linear v-if="loading" indeterminate color="primary" />
       <v-table v-if="!loading || stations.length">
-        <thead><tr><th>Posto</th><th>CNPJ</th><th>Localização</th><th>Bandeira</th><th>Status</th></tr></thead>
+        <thead><tr><th>Posto</th><th>CNPJ</th><th>Localização</th><th>Bandeira</th><th>Status</th><th>Atualizado em</th><th>Última importação</th></tr></thead>
         <tbody><tr v-for="station in stations" :key="station.id">
           <td><strong>{{ station.tradeName || station.legalName }}</strong><br><small>{{ station.legalName }}</small></td>
           <td>{{ station.cnpj }}</td><td>{{ station.address.city }} / {{ station.address.state }}</td>
           <td>{{ station.brand?.name || '—' }}</td><td><v-chip size="small" color="success" variant="tonal">{{ station.status }}</v-chip></td>
-        </tr><tr v-if="!stations.length"><td colspan="5" class="text-center py-8">Nenhum posto encontrado.</td></tr></tbody>
+          <td>{{ formatDate(station.updatedAt) }}</td>
+          <td>
+            <RouterLink v-if="station.lastImport" :to="{ path: '/imports', query: { importId: station.lastImport.id } }">
+              {{ formatDate(station.lastImport.date) }}
+            </RouterLink>
+            <span v-else>—</span>
+          </td>
+        </tr><tr v-if="!stations.length"><td colspan="7" class="text-center py-8">Nenhum posto encontrado.</td></tr></tbody>
       </v-table>
       <v-card-actions class="justify-end"><span class="text-caption mr-3">Página {{ page }}</span><v-btn icon="mdi-chevron-left" :disabled="page === 1 || loading" @click="load(page - 1)" /><v-btn icon="mdi-chevron-right" :disabled="!hasNext || loading" @click="load(page + 1)" /></v-card-actions>
     </v-card>
@@ -50,12 +57,12 @@
             clearable
             :error-messages="importError"
             :disabled="importing"
-            @update:model-value="importError = ''; importSuccess = ''"
+            @update:model-value="handleImportFileChange"
           />
           <v-alert v-if="importSuccess" type="success" variant="tonal" class="mt-3">{{ importSuccess }}</v-alert>
         </v-card-text>
         <v-card-actions class="justify-end">
-          <v-btn variant="text" :disabled="importing" @click="importDialog = false">Cancelar</v-btn>
+          <v-btn variant="text" :disabled="importing" @click="importDialog = false">{{ importSuccess ? 'Fechar' : 'Cancelar' }}</v-btn>
           <v-btn color="secondary" :loading="importing" :disabled="!importFile" @click="importStationsCsv">Enviar arquivo</v-btn>
         </v-card-actions>
       </v-card>
@@ -95,6 +102,11 @@ async function exportStationsCsv() {
   }
 }
 
+function handleImportFileChange(file: File | null) {
+  importError.value = '';
+  if (file) importSuccess.value = '';
+}
+
 function openImportDialog() {
   importFile.value = null;
   importError.value = '';
@@ -126,6 +138,11 @@ async function importStationsCsv() {
   } finally {
     importing.value = false;
   }
+}
+
+function formatDate(value: string | null) {
+  if (!value) return '—';
+  return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value));
 }
 
 onMounted(() => load());

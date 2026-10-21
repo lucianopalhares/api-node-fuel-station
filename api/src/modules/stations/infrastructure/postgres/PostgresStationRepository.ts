@@ -28,6 +28,9 @@ type StationRow = {
   pump_count: number | null;
   lane_count: number | null;
   notes: string | null;
+  updated_at: string;
+  last_import_id: string | null;
+  last_import_date: string | null;
 };
 
 export class PostgresStationRepository implements StationRepository {
@@ -60,7 +63,10 @@ export class PostgresStationRepository implements StationRepository {
               s.data_inauguracao::TEXT AS opening_date,
               s.numero_bicos AS pump_count,
               s.numero_pistas AS lane_count,
-              s.observacoes AS notes
+              s.observacoes AS notes,
+              s.updated_at::TEXT AS updated_at,
+              last_import.id AS last_import_id,
+              last_import.imported_at::TEXT AS last_import_date
         FROM stations s
         JOIN station_statuses ss ON ss.id = s.status_id
         LEFT JOIN brands b ON b.id = s.brand_id
@@ -70,6 +76,16 @@ export class PostgresStationRepository implements StationRepository {
         LEFT JOIN responsible_positions rp ON rp.id = r.position_id
         LEFT JOIN station_fuels sf ON sf.station_id = s.id
         LEFT JOIN fuels f ON f.id = sf.fuel_id
+        LEFT JOIN LATERAL (
+          SELECT i.id,
+                 COALESCE(i.finished_at, i.started_at) AS imported_at
+            FROM import_rows ir
+            JOIN imports i ON i.id = ir.import_id
+           WHERE ir.station_id = s.id
+             AND ir.status IN ('imported', 'updated')
+           ORDER BY COALESCE(i.finished_at, i.started_at) DESC NULLS LAST, i.id DESC
+           LIMIT 1
+        ) last_import ON TRUE
         WHERE ($1::TEXT IS NULL
           OR s.cnpj ILIKE $1
           OR s.nome_posto ILIKE $1
@@ -77,7 +93,9 @@ export class PostgresStationRepository implements StationRepository {
           OR b.name ILIKE $1
           OR c.name ILIKE $1
           OR st.abbreviation ILIKE $1)
-        GROUP BY s.id, b.id, c.ibge_code, st.abbreviation, r.id, rp.id, ss.id
+        GROUP BY s.id, b.id, c.ibge_code, st.abbreviation, r.id, rp.id, ss.id,
+                 s.updated_at,
+                 last_import.id, last_import.imported_at
         ORDER BY s.nome_fantasia NULLS LAST, s.nome_posto, s.cnpj
         LIMIT $2 OFFSET $3`,
       [searchPattern, limit, offset],
@@ -119,5 +137,9 @@ function toStation(row: StationRow): Station {
     pumpCount: row.pump_count,
     laneCount: row.lane_count,
     notes: row.notes,
+    updatedAt: row.updated_at,
+    lastImport: row.last_import_id && row.last_import_date
+      ? { id: row.last_import_id, date: row.last_import_date }
+      : null,
   };
 }

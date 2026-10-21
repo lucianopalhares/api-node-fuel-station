@@ -7,6 +7,8 @@ export type Station = {
   address: { city: string; state: string; street: string | null; number: string | null };
   status: string;
   fuels: string[];
+  updatedAt: string;
+  lastImport: { id: string; date: string } | null;
 };
 
 export type StationPage = {

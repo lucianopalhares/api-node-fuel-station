@@ -190,3 +190,8 @@ Permitir que na importação somente aceite nomes terminados em `.csv`, sem dife
 ## Permitir no front exportar postos
 
 - Na pagina de postos /stations. Permitir um botão pra exportar postos com padrão de 100 mas podendo alterar a quantidade. São exportados por ordem decrescente de data de alteração.
+
+## Atualização da listagem de postos
+
+- As datas usam `stations.updated_at` e a última linha `import_rows` com status `imported` ou `updated`.
+- O link da importação usa `importId` na URL exibindo a data da ultima importação em cada linha de posto, permitindo abrir a importação especifica para visualizar os detalhes da importação daquele posto.

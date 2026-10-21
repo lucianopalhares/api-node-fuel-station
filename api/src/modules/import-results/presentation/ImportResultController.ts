@@ -13,7 +13,21 @@ export class ImportResultController {
 
   async list(request: Request, response: Response): Promise<void> {
     const limit = this.parsePositiveInteger(request.query.limit, 'limit', 20, 100);
-    response.json({ data: await this.listImports.execute(limit) });
+    const importId = this.parseOptionalImportId(request.query.importId);
+    response.json({ data: await this.listImports.execute(limit, importId) });
+  }
+
+  private parseOptionalImportId(value: unknown): string | undefined {
+    if (value === undefined || value === '') return undefined;
+    const parsed = parseOptionalInteger(value);
+    if (parsed === undefined || parsed < 1) {
+      throw new ValidationError(
+        'INVALID_IMPORT_ID',
+        'O identificador da importação deve ser um inteiro positivo.',
+        { field: 'importId' },
+      );
+    }
+    return String(parsed);
   }
 
   async detail(request: Request, response: Response): Promise<void> {
