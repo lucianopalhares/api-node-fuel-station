@@ -2,7 +2,10 @@
   <div>
     <div class="d-flex align-center justify-space-between mb-6">
       <div><h1 class="text-h4">Postos</h1><p class="text-medium-emphasis">Consulte os postos importados.</p></div>
-      <v-btn color="primary" prepend-icon="mdi-download" :loading="exporting" @click="exportError = ''; exportDialog = true">Exportar postos</v-btn>
+      <div class="d-flex ga-2">
+        <v-btn color="secondary" prepend-icon="mdi-upload" @click="openImportDialog">Importar postos</v-btn>
+        <v-btn color="primary" prepend-icon="mdi-download" :loading="exporting" @click="exportError = ''; exportDialog = true">Exportar postos</v-btn>
+      </div>
     </div>
     <v-card>
       <v-card-text>
@@ -33,6 +36,30 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="importDialog" max-width="520">
+      <v-card>
+        <v-card-title>Importar postos</v-card-title>
+        <v-card-text>
+          <p class="text-body-2 mb-4">Selecione um arquivo CSV no formato padrão de postos. O arquivo será validado e processado pela API.</p>
+          <v-file-input
+            v-model="importFile"
+            label="Arquivo CSV"
+            accept=".csv,text/csv,application/csv,application/vnd.ms-excel"
+            prepend-icon="mdi-file-delimited"
+            show-size
+            clearable
+            :error-messages="importError"
+            :disabled="importing"
+            @update:model-value="importError = ''; importSuccess = ''"
+          />
+          <v-alert v-if="importSuccess" type="success" variant="tonal" class="mt-3">{{ importSuccess }}</v-alert>
+        </v-card-text>
+        <v-card-actions class="justify-end">
+          <v-btn variant="text" :disabled="importing" @click="importDialog = false">Cancelar</v-btn>
+          <v-btn color="secondary" :loading="importing" :disabled="!importFile" @click="importStationsCsv">Enviar arquivo</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -40,9 +67,13 @@
 import { onMounted, ref } from 'vue';
 import { exportStations, getStations } from '../services/stations';
 import type { Station } from '../types/station';
+import { uploadStations } from '../services/imports';
 
 const stations = ref<Station[]>([]); const search = ref(''); const page = ref(1); const hasNext = ref(false); const loading = ref(false); const error = ref('');
 const exportDialog = ref(false); const exportLimit = ref(100); const exporting = ref(false); const exportError = ref('');
+
+const importDialog = ref(false); const importFile = ref<File | null>(null); const importing = ref(false);
+const importError = ref(''); const importSuccess = ref('');
 
 async function load(nextPage = 1) { loading.value = true; error.value = ''; try { const result = await getStations(nextPage, 10, search.value); stations.value = result.data; page.value = result.pagination.page; hasNext.value = result.pagination.hasNext; } catch (cause) { error.value = cause instanceof Error ? cause.message : 'Erro inesperado ao carregar os postos.'; } finally { loading.value = false; } }
 
@@ -61,6 +92,39 @@ async function exportStationsCsv() {
     exportError.value = cause instanceof Error ? cause.message : 'Erro inesperado ao exportar os postos.';
   } finally {
     exporting.value = false;
+  }
+}
+
+function openImportDialog() {
+  importFile.value = null;
+  importError.value = '';
+  importSuccess.value = '';
+  importDialog.value = true;
+}
+
+async function importStationsCsv() {
+  const file = importFile.value;
+  if (!file) {
+    importError.value = 'Selecione um arquivo CSV para continuar.';
+    return;
+  }
+  if (!file.name.toLowerCase().endsWith('.csv')) {
+    importError.value = 'Selecione um arquivo com extensão .csv.';
+    return;
+  }
+
+  importing.value = true;
+  importError.value = '';
+  importSuccess.value = '';
+  try {
+    const result = await uploadStations(file);
+    importSuccess.value = `Arquivo recebido com sucesso e enviado para processamento. Código da importação: ${result.id}.`;
+    importFile.value = null;
+    await load(1);
+  } catch (cause) {
+    importError.value = cause instanceof Error ? cause.message : 'Não foi possível importar o arquivo. Confira o CSV e tente novamente.';
+  } finally {
+    importing.value = false;
   }
 }
 

@@ -14,7 +14,6 @@
 <script setup lang="ts">
 const menu = [
   { label: 'Postos', to: '/stations' },
-  { label: 'Importar', to: '/imports' },
-  { label: 'Exportar', to: '/exports' },
+  { label: 'Importações', to: '/imports' },
 ];
 </script>
