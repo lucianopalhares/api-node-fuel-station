@@ -1,98 +1,68 @@
 # Principais implementações e decisões
 
-Registra aqui o que de principal foi concluído e as decisões tomadas.
+## Arquitetura e organização do código
 
-## Fase 1 — Esqueleto da API
-
-- Criada a pasta `api/` com Node.js `22.23.2`, Express e TypeScript.
-- Configurado o acesso ao PostgreSQL pelo pacote `pg`.
-- Adicionada a rota `GET /health`, que executa `SELECT 1` pra verificar a conexão com o banco.
-
-## Fase 2 — Docker da API e do banco
-
-- Criado um Dockerfile pra executar a API.
-- Criado o Compose com os serviços `api` e `db`, com PostgreSQL 18.
-- A API conecta ao banco pelo endereço `db:5432`.
-- Publicadas as portas externas `3261` para a API e `5418` para o PostgreSQL.
-- Adicionado o volume `postgres_data` em `/var/lib/postgresql` para persistir os dados.
-- Variaveis de ambiente no arquivo `.env`; assim como credenciais. Se ele nao for criado, usa valores do docker-compose como padrão.
-
-## Fase 3 — Instruções iniciais
-
-- Criado o README sobre o projeto.
-- Incluída uma nota de que as funcionalidades do desafio ainda não foram implementadas.
-- Quando o volume persistente do PostgreSQL estiver com erro de credenciais, precisa recriar com `docker compose down -v` e `docker compose up --build -d`, pra remover os dados dantigos.
-
-## Inicia DDD e Módulo de cidades
-
-- Inicia um padrão DDD.
-- Modulo de cidades com estados, usando use cases, entidades e repository.
-- Sql para criar tabelas de cidades e estados.
-
-## Acesso a dados
-
+- É usado um padrão DDD.
 - O domínio e os casos de uso dependem de abstrações (`CityRepository` e `DatabaseClient`), enquanto o PostgreSQL fica isolado nos adapters. Assim, a infraestrutura pode ser substituída sem alterar a regra de negócio; o SQL e o schema continuam específicos do PostgreSQL.
+- O módulo de imports permanece separado do módulo de filas. Cada um possui responsabilidade diferente.
+- Normalizações de texto, dígitos, email, inteiros e limites ficam em `modules/shared/validation/InputValidation.ts`. Os outros módulos reaproveitam os métodos.
+- Há um módulo compartilhado para tratamento de erros entre os outros módulos.
 
-## Modulo de responsavel
+## Execução e infraestrutura
 
-- Implementa o modulo de responsavel, com sql para criar tabelas assim como use cases , repository e rotas. E busca no banco assim como salvar o responsavel e verificar se nao existe conflito de um responsavel por email e cpf.
+- A API usa Node.js `22.23.2`, Express e TypeScript.
+- O acesso ao PostgreSQL é feito pelo pacote `pg`.
+- A rota `GET /health` executa `SELECT 1` para verificar a conexão com o banco.
+- O Dockerfile executa a API.
+- O Compose usa os serviços `api` e `db`, com PostgreSQL 18.
+- A API conecta ao banco pelo endereço `db:5432`.
+- As portas externas são `3261` para a API e `5418` para o PostgreSQL.
+- O volume `postgres_data` fica em `/var/lib/postgresql` para persistir os dados.
+- As variáveis de ambiente e as credenciais ficam no arquivo `.env`; se ele não for criado, são usados os valores do `docker-compose` como padrão.
+- Quando o volume persistente do PostgreSQL fica com erro de credenciais, é necessário recriá-lo com `docker compose down -v` e `docker compose up --build -d`, removendo os dados antigos.
 
-## Modulo posto de combustivel
+## Banco de dados e modelagem
 
-- Implementa o modulo de posto de combustivel. Cria as tabelas necessarias de posto de combustivel, de tipos de combustivel, de bandeira do combustivel e da importacao da planilha.
+- O módulo de cidades possui estados, cidades, entidades, use cases, repositories e SQL para criar as tabelas.
+- O módulo de responsáveis possui tabelas, use cases, repositories e rotas. O responsável é buscado e salvo verificando conflitos por email e CPF.
+- O módulo de postos de combustível possui as tabelas necessárias para postos, tipos de combustível, bandeiras e importações.
+- `stations` armazena somente `city_ibge_code` como referência obrigatória. Município e UF são derivados de `cities` e `states` na leitura e na exportação, evitando duas fontes de verdade.
+- Os status dos postos ficam em uma tabela própria, pois podem existir status diferentes no futuro.
+- As migrations e os seeders são separados para manter a estrutura do banco independente dos dados iniciais, permitindo executar `db:migrate` e `db:seed:production` de forma controlada e idempotente.
+- Existem seeders para alimentar dados padrão e um posto de combustível para teste.
+- Há um seeder para popular cidades.
 
-## Seeder e Migrations
+## Registro das linhas importadas
 
-- As migrations e os seeders foram separados para manter a estrutura do banco independente dos dados iniciais, permitindo executar `db:migrate` e `db:seed:production` de forma controlada e idempotente.
-- Seeders para alimentar dados padroes e ja um posto de combustivel pra teste.
+- `stations` permanece a tabela para armazenar os postos.
+- `import_rows` registra uma linha para cada linha do CSV, incluindo linhas válidas, duplicadas ou com erro.
+- `import_rows.raw_data` guarda os valores recebidos e `import_rows.normalized_data` registra a representação tratada usada na importação.
+- As tabelas `station_imports` e `station_import_fuels` foram removidas porque não representavam todas as linhas do arquivo: a chave dependia do posto e não permitia registrar duplicidades ou linhas sem posto associado.
 
-## Integridade entre cidade e UF
+## Importação, validação e normalização
 
-- `stations` passa a armazenar somente `city_ibge_code` como referência obrigatória. Município e UF são derivados de `cities` e `states` na leitura e na exportação, evitando duas fontes de verdade.
-- Seeder para popular cidades
-
-## Status do posto
-
-- Permitir guardar status do posto em uma tabela do banco de dados, pois pode ser que existam status diferentes no futuro para o posto.
-
-## Melhora cada linha da importação
-
-`stations` permanece a tabela pra armazenar os postos. Nova tabela `import_rows` registra uma linha para cada linha do CSV, incluindo linhas válidas, duplicadas ou com erro.
-
-`import_rows.raw_data` guarda valores recebidos e `import_rows.normalized_data` registra a representação tratada usada na importação.
-
-`station_imports` e `station_import_fuels` foram removidas porque não representavam todas as linhas do arquivo: a chave dependia do posto e não permitia registrar duplicidades ou linhas sem posto associado.
-
-## Unicidade do arquivo importado
-
-`imports.file_checksum` possui a constraint `imports_file_checksum_unique`, garantindo que dois registros não representem o mesmo arquivo. O campo continua nullable para preservar compatibilidade com registros ou fluxos que podem não possuir checksum; valores não nulos são únicos. A migration é idempotente e falha caso já existam checksums duplicados.
-
-## Combustíveis informados na importação
-
-A coluna `combustiveis` é uma lista de nomes separados por vírgula dentro do campo CSV. O parser deve dividir a lista, remover espaços extras e normalizar cada item. Cada combustível resolvido no catálogo `fuels` — diretamente ou por `fuel_aliases` — será persistido como um vínculo em `station_fuels`. Esse relacionamento permite vários combustíveis para o mesmo posto.
-
-## Validação do email do responsável
-
+- O arquivo da importação é enviado para um bucket S3 local. Em desenvolvimento, o Compose usa o Silo (`pgsty/silo`), compatível com a API e o protocolo do MinIO.
+- A tabela `imports` guarda nome, checksum, tamanho, tipo MIME, bucket, chave do objeto, status e contadores.
+- O CSV é relido do storage em streaming para validar o header e contar as linhas.
+- A coluna `combustiveis` é uma lista de nomes separados por vírgula. O parser divide a lista, remove espaços extras e normaliza cada item.
+- Cada combustível informado é criado ou atualizado no catálogo `fuels` usando o nome normalizado. Em seguida, o posto recebe os vínculos correspondentes na tabela `station_fuels`.
 - O campo `email_responsavel` é opcional: vazio ou composto apenas por espaços é normalizado para `null`.
 - Quando preenchido, o email é aparado, convertido para lowercase e validado na aplicação antes da busca ou criação do responsável.
-- A validação exige um formato simples `local@dominio.tld` e no máximo 254 caracteres, limite compatível com a coluna `responsibles.email`.
+- A validação do email exige um formato simples `local@dominio.tld` e no máximo 254 caracteres, limite compatível com a coluna `responsibles.email`.
+- Os métodos de validar CPF e CNPJ têm opção default para não validar se CPF e CNPJ são verdadeiros, apenas a quantidade de dígitos, porque a planilha de modelo possui CNPJ e CPFs inválidos.
+- CEP com 7 dígitos deve considerar que o zero à esquerda foi ignorado e, portanto, é considerado válido.
+- CEP, CPF e CNPJ com letras ou caracteres fora das máscaras permitidas são rejeitados.
+- `numero_bicos` e `numero_pistas` rejeitam valores acima de `2147483647`, antes da tentativa de gravação no PostgreSQL.
+- A validação de datas aceita os formatos `DD/MM/AAAA`, `MM/DD/AAAA` e `AAAA-MM-DD`, convertendo-os para `AAAA-MM-DD` antes do banco.
+- Datas inválidas são rejeitadas. Quando dia e mês são menores ou iguais a 12, a interpretação assume o padrão brasileiro por compatibilidade com `docs/example.csv`.
 
-## Módulo para compartilhar validação e tratamento
+## Unicidade, duplicidades e transações
 
-- Normalizações de texto, dígitos, email, inteiros e limites ficam em `modules/shared/application/validation/InputValidation.ts`.
-- Os outros modulos reaproveitam os metodos.
-
-## Módulo para tratamento de erros
-
-- Ter um modulo para acusar erros e ser compartilhado entre os outros modulos para usar-lo.
-
-## Importação com storage S3
-
-- O arquivo da importação é enviado para um bucket S3 local. Em desenvolvimento, o Compose usa o Silo (`pgsty/silo`), compatível com a API e o protocolo do MinIO. A tabela `imports` guarda apenas nome, checksum, tamanho, tipo MIME, bucket, chave do objeto, status e contadores. O CSV é relido do storage em streaming para validar o header e contar as linhas.
-
-- Essa primeira versão prioriza somente a primeira etapa de importação para teste para verificar o recebimento do arquivo.
-
-- Tambem foi mudado de pasta o arquivo de validar alguns dados para uma pasta geral de validação.
+- `imports.file_checksum` possui a constraint `imports_file_checksum_unique`, garantindo que dois registros não representem o mesmo arquivo. O campo continua nullable para preservar compatibilidade com registros ou fluxos que podem não possuir checksum; valores não nulos são únicos.
+- A migration de unicidade é idempotente e falha caso já existam checksums duplicados.
+- Cada linha do CSV é processada em uma transação PostgreSQL própria.
+- A criação ou atualização do posto, dos responsáveis e catálogos, a remoção e inserção dos combustíveis e o registro em `import_rows` são confirmados juntos.
+- Se qualquer etapa falhar, a transação executa rollback. A linha inválida é registrada como `invalid` depois da reversão.
 
 ## Fila e observabilidade
 
@@ -103,99 +73,34 @@ A coluna `combustiveis` é uma lista de nomes separados por vírgula dentro do c
 - Os logs da API e do worker são estruturados em JSON e visualizados pelo Dozzle.
 - O painel RabbitMQ permite acompanhar filas, mensagens e consumidores.
 - As credenciais locais padrão são `ipdv/ipdv`.
-
-# Correção de tabelas faltantes e erro da fila
-
 - A migration `013` adiciona à tabela `imports` os metadados do arquivo no storage.
 - A migration `014` permite o status `queued` nas importações.
 - O bootstrap executa as migrations `007` a `010` antes da `011` e inclui a `014` depois da `013`.
 
-# Salva as linhas da importação
+## Limites e recebimento do arquivo
 
-- Cria os postos de combustivel na importação do arquivo.
+- O endpoint de importação limita cada arquivo a 10 MiB por padrão, usando o limite `fileSize` do Busboy.
+- O valor pode ser alterado por `MAX_IMPORT_FILE_SIZE_BYTES`.
+- Quando o stream é truncado, a API responde HTTP 413 com o código `FILE_TOO_LARGE`, marca a importação como erro, não publica a mensagem no RabbitMQ e tenta remover o objeto parcial do storage.
+- A importação aceita somente nomes terminados em `.csv`, sem diferenciar maiúsculas e minúsculas.
+- Os MIME types aceitos são `text/csv`, `application/csv` e `application/vnd.ms-excel`.
+- Parâmetros adicionais do MIME, como `charset=utf-8`, são removidos antes da comparação.
+- A validação é feita antes do upload para o storage, retornando `INVALID_FILE_EXTENSION` ou `INVALID_FILE_TYPE` quando aplicável.
 
-# Módulo para exportar uma importação feita
+## Exportação
 
-- Exporta os dados, levando em consideração que ele busca os dados do banco de dados relacionado a alguma importação que foi feita passando o id da importação.
+- A exportação geral de postos consulta a tabela `stations`, em vez de depender de uma importação específica.
+- A ordenação é `updated_at DESC, id DESC` para priorizar os postos modificados mais recentemente.
+- O endpoint aceita `limit`, com padrão de 1.000 e máximo de 10.000 registros.
+- A consulta usa paginação por chave composta (`updated_at`, `id`) em lotes de 500.
+- A exportação de uma importação busca os dados relacionados ao `id` da importação.
 
-## Combustíveis informados na importação
+## Frontend
 
-A coluna `combustiveis` é uma lista de nomes separados por vírgula dentro do campo CSV. O parser divide a lista, remove espaços extras e normaliza cada item.
-
-Cada combustível informado é criado ou atualizado no catálogo `fuels` usando o nome normalizado. Em seguida, o posto recebe os vínculos correspondentes na tabela `station_fuels`.
-
-## CPF e CNPJ
-
-Além de conferir a quantidade de dígitos, a importação agora valida os dígitos verificadores do CPF e do CNPJ.
-
-## Transação por linha na importação
-
-Cada linha do CSV agora é processada em uma transação PostgreSQL própria. A criação ou atualização do posto, dos responsáveis e catálogos, a remoção e inserção dos combustíveis e o registro em `import_rows` são confirmados juntos.
-
-Se qualquer etapa falhar, a transação executa rollback. Assim, a linha inválida não deixa posto, combustível ou relacionamento parcialmente gravado; o fluxo existente registra a linha como `invalid` depois da reversão.
-
-## Validação de CPF e CNPJ
-
-- Levando em  consideração a planilha de modelo que possui cnpj e cpfs invalidos, os metodos de validar cpf e cnpj tem opcao default para nao validar se cpf e cnpj sao verdadeiros, apenas a quantidade de digitos.
-
-## Normalizar cep corretamente
-
-- Cep com 7 digitos deve considerar que esta ignorando o zero a esquerda, portante é considerado valido
-
-## Algumas correções de validação
-
-- CEP, CPF e CNPJ com letras ou caracteres fora das máscaras permitidas passam
-  a ser rejeitados, em vez de terem caracteres removidos como aceitar letras por exemplo.
-- CEP com 7 dígitos continua recebendo somente um zero à esquerda.
-- `numero_bicos` e `numero_pistas` passam a rejeitar valores acima de
-  `2147483647`, antes da tentativa de gravação no PostgreSQL.
-
-## Exportação dos postos
-
-A exportação de postos consulta a tabela `stations`, em vez de
-depender de uma importação específica. A ordenação é `updated_at DESC, id DESC`
-para priorizar os postos modificados mais recentemente.
-
-O endpoint aceita `limit`, com padrão de 1.000 e máximo de 10.000 registros. A
-consulta usa paginação por chave composta (`updated_at`, `id`) em lotes de 500,
-
-## Melhora listar postos
-
-Adicionar paginação de postos de combustiveis e limite por pagina.
-
-### Limite de tamanho do arquivo de importação
-
-O endpoint de importação limita cada arquivo a 10 MiB por padrão, usando o limite `fileSize` do Busboy. O valor pode ser alterado por `MAX_IMPORT_FILE_SIZE_BYTES`. Quando o stream é truncado, a API responde HTTP 413 com o código `FILE_TOO_LARGE`, marca a importação como erro e não publica a mensagem no RabbitMQ e tenta remover o objeto parcial do storage. 
-
-## Validação de extensão e tipo MIME do CSV
-
-Permitir que na importação somente aceite nomes terminados em `.csv`, sem diferenciar maiúsculas e minúsculas, e os MIME types `text/csv`, `application/csv` e `application/vnd.ms-excel`. Parâmetros adicionais do MIME, como `charset=utf-8`, são removidos antes da comparação. A validação é feita antes do upload para o storage, retornando `INVALID_FILE_EXTENSION` ou `INVALID_FILE_TYPE` quando aplicável.
-
-## Validação e normalização de datas
-
-- Validar data em api/src/modules/shared/validation/DateValidation.ts, a lógica aceita os formatos DD/MM/AAAA, MM/DD/AAAA e AAAA-MM-DD, convertendos para AAAA-MM-DD antes do banco. Datas inválidas são rejeitadas e ambiguidades (dia e mês <= 12) assumem o padrão brasileiro por compatibilidade com docs/example.csv.
-
-## Separar modulos de importar e de fila
-
-- O módulo de imports possuia importação e fila juntos, foi dividido criando outro modulo de filas e o modulo de importação permanece. Cada um com responsabilidade diferente.
-
-## Implementando front com Vue 3
-
-- Criando front pra listar postos de combustiveis de forma simples
-
-## Página front pra exibir as importações
-
-- Exibir as importações em uma pagina, com linhas processadas, com erro e sucesso.
-
-## Permitir no front exportar postos
-
-- Na pagina de postos /stations. Permitir um botão pra exportar postos com padrão de 100 mas podendo alterar a quantidade. São exportados por ordem decrescente de data de alteração.
-
-## Atualização da listagem de postos
-
-- As datas usam `stations.updated_at` e a última linha `import_rows` com status `imported` ou `updated`.
-- O link da importação usa `importId` na URL exibindo a data da ultima importação em cada linha de posto, permitindo abrir a importação especifica para visualizar os detalhes da importação daquele posto.
-
-## Baixar planilha so com linhas de erro
-
-- Na tela de importações, as importações que ocorreram erros parciais ou erros. Ter um botão para baixar uma nova planilha com somente as linhas de erro. Assim permite corrigir as linhas e tentar uma nova importação.
+- O frontend usa Vue 3 e exibe os postos de combustível de forma simples.
+- A página de importações exibe as importações, as linhas processadas, as linhas com erro e as linhas com sucesso.
+- Na página `/stations`, há um botão para exportar postos com padrão de 100 registros, permitindo alterar a quantidade.
+- Os postos exportados pela tela são ordenados pela data decrescente de alteração.
+- As datas da listagem usam `stations.updated_at` e a última linha de `import_rows` com status `imported` ou `updated`.
+- O link da importação usa `importId` na URL, exibindo a data da última importação em cada linha de posto e permitindo abrir a importação específica para visualizar seus detalhes.
+- Na tela de importações, as importações com erros parciais ou erros possuem um botão para baixar uma planilha somente com as linhas de erro, permitindo corrigi-las e tentar uma nova importação.
