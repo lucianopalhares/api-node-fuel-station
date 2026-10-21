@@ -3,7 +3,16 @@
     <v-app-bar color="primary" density="comfortable">
       <v-app-bar-title>IPDV · Gestão de postos</v-app-bar-title>
       <v-spacer />
-      <v-btn v-for="item in menu" :key="item.to" :to="item.to" variant="text" color="white">
+      <v-btn
+        v-for="item in menu"
+        :key="item.label"
+        :to="item.to"
+        :href="item.href"
+        :target="item.href ? '_blank' : undefined"
+        :rel="item.href ? 'noopener noreferrer' : undefined"
+        variant="text"
+        color="white"
+      >
         {{ item.label }}
       </v-btn>
     </v-app-bar>
@@ -12,8 +21,17 @@
 </template>
 
 <script setup lang="ts">
-const menu = [
+
+type MenuItem = {
+  label: string;
+  to?: string;
+  href?: string;
+};
+
+const menu: MenuItem[] = [
   { label: 'Postos', to: '/stations' },
   { label: 'Importações', to: '/imports' },
+  //{ label: 'RabbitMQ', href: import.meta.env.VITE_QUEUE_URL || 'http://localhost:15673' },
+  { label: 'Logs', href: import.meta.env.VITE_OBSERVABILITY_URL || 'http://localhost:9999' },
 ];
 </script>

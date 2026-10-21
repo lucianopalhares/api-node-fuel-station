@@ -38,11 +38,15 @@ services:
       - "5173:5173"
     environment:
       API_PROXY_TARGET: http://api:3000
+      VITE_QUEUE_URL: ${VITE_QUEUE_URL:-http://localhost:15673}
+      VITE_OBSERVABILITY_URL: ${VITE_OBSERVABILITY_URL:-http://localhost:9999}
     depends_on:
       - api
     volumes:
       - ./front:/app
       - front_node_modules:/app/node_modules
+    labels:
+      com.ipdv.observability: "true"
 
   db:
     image: postgres:18-alpine
