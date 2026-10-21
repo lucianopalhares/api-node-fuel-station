@@ -5,7 +5,18 @@ import { clampInteger } from '../../../shared/validation/InputValidation';
 export class ListStations {
   constructor(private readonly repository: StationRepository) {}
 
-  execute(input: { limit?: number } = {}): Promise<Station[]> {
-    return this.repository.list(clampInteger(input.limit, 100, 1, 500));
+  async execute(input: { page?: number; limit?: number } = {}): Promise<{
+    data: Station[];
+    pagination: { page: number; limit: number; hasNext: boolean };
+  }> {
+    const page = clampInteger(input.page, 1, 1, Number.MAX_SAFE_INTEGER);
+    const limit = clampInteger(input.limit, 100, 1, 500);
+    const stations = await this.repository.list(limit + 1, (page - 1) * limit);
+
+    return {
+      data: stations.slice(0, limit),
+      pagination: { page, limit, hasNext: stations.length > limit },
+    };
   }
 }
+

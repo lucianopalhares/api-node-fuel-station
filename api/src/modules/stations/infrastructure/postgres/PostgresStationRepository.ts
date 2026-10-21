@@ -33,7 +33,7 @@ type StationRow = {
 export class PostgresStationRepository implements StationRepository {
   constructor(private readonly database: DatabaseClient) {}
 
-  async list(limit: number): Promise<Station[]> {
+  async list(limit: number, offset: number): Promise<Station[]> {
     const result = await this.database.query<StationRow>(
       `SELECT s.id,
               s.cnpj,

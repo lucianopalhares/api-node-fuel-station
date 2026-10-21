@@ -159,3 +159,6 @@ para priorizar os postos modificados mais recentemente.
 O endpoint aceita `limit`, com padrão de 1.000 e máximo de 10.000 registros. A
 consulta usa paginação por chave composta (`updated_at`, `id`) em lotes de 500,
 
+## Melhora listar postos
+
+Adicionar paginação de postos de combustiveis e limite por pagina.

@@ -7,17 +7,27 @@ export class StationController {
   constructor(private readonly listStations: ListStations) {}
 
   async list(request: Request, response: Response): Promise<void> {
+    const hasPage = request.query.page !== undefined && request.query.page !== '';
     const hasLimit = request.query.limit !== undefined && request.query.limit !== '';
+    const page = parseOptionalInteger(request.query.page);
     const limit = parseOptionalInteger(request.query.limit);
 
-    if (hasLimit && limit === undefined) {
+    if (hasPage && (page === undefined || page < 1)) {
+      throw new ValidationError(
+        'INVALID_PAGE',
+        'A página deve ser informada como um número inteiro maior que zero.',
+        { field: 'page' },
+      );
+    }
+
+    if (hasLimit && (limit === undefined || limit < 1)) {
       throw new ValidationError(
         'INVALID_LIMIT',
-        'O limite deve ser informado como um número inteiro.',
+        'O limite deve ser informado como um número inteiro maior que zero.',
         { field: 'limit' },
       );
     }
 
-    response.json({ data: await this.listStations.execute({ limit }) });
+    response.json(await this.listStations.execute({ page, limit }));
   }
 }
