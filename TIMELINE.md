@@ -199,3 +199,13 @@ Permitir que na importação somente aceite nomes terminados em `.csv`, sem dife
 ## Baixar planilha so com linhas de erro
 
 - Na tela de importações, as importações que ocorreram erros parciais ou erros. Ter um botão para baixar uma nova planilha com somente as linhas de erro. Assim permite corrigir as linhas e tentar uma nova importação.
+
+## Fase — Importação assíncrona com staging e lotes
+
+- A página `/imports` passou a acompanhar o ciclo da importação, exibindo status, total processado, registros criados, atualizados e com erro.
+- O upload permanece assíncrono: o arquivo é armazenado no storage e um job pequeno é publicado na fila `imports`.
+- O worker passou a montar um pipeline separado em staging, aplicação em lote e finalização.
+- O staging lê o CSV em streaming e grava 1.000 linhas por vez em `import_rows`, preservando os dados brutos e normalizados.
+- A aplicação busca apenas linhas `ready` e processa 500 por vez, usando repositories PostgreSQL separados para catálogos, responsáveis, postos e combustíveis.
+- O resumo final é calculado a partir das linhas persistidas, permitindo que `/imports` apresente o resultado mesmo depois que o worker termina.
+- A migration `018_import_batch_staging.sql` adiciona os estados intermediários, o campo `applied_at` e o índice usado na leitura incremental do staging.

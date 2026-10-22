@@ -5,7 +5,7 @@ import type { Readable } from 'node:stream';
 import { validateCsvHeaders } from '../../shared/validation/CsvImportValidation';
 import { logger } from '../../shared/observability/logger';
 import type { ImportFileStorage } from './ports/ImportFileStorage';
-import type { CsvStationRow } from './StationImportPersister';
+import type { CsvStationRow } from './staging/types';
 
 export class CsvImportReader {
   constructor(private readonly storage: ImportFileStorage) {}

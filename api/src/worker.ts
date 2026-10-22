@@ -1,12 +1,12 @@
-// consumir a fila de importações em um processo separado da API.
+/** Inicia o worker RabbitMQ com o pipeline de importação em staging e lotes. */
 
 import { Pool } from 'pg';
 import { logger } from './modules/shared/observability/logger';
 import { PostgresDatabaseClient } from './modules/shared/infrastructure/database/PostgresDatabaseClient';
 import { S3ObjectStorage } from './modules/imports/infrastructure/S3ObjectStorage';
-import { ProcessImport } from './modules/imports/application/ProcessImport';
 import type { ImportJob } from './modules/imports/application/ports/ImportJobPublisher';
 import { RabbitMqQueue } from './modules/queue/infrastructure/RabbitMqQueue';
+import { createBatchImportProcessor } from './modules/imports/infrastructure/createBatchImportProcessor';
 
 async function main(): Promise<void> {
   const queueName = process.env.RABBITMQ_IMPORT_QUEUE ?? 'imports';
@@ -21,7 +21,7 @@ async function main(): Promise<void> {
   });
 
   const database = new PostgresDatabaseClient(pool);
-  const processor = new ProcessImport(database, new S3ObjectStorage(bucket));
+  const processor = createBatchImportProcessor(database, new S3ObjectStorage(bucket));
   const queue = new RabbitMqQueue(rabbitUrl);
 
   logger.info('Import worker started', { queue: queueName });
@@ -45,3 +45,4 @@ void main().catch((error) => {
   logger.error('Import worker could not start', { error });
   process.exit(1);
 });
+

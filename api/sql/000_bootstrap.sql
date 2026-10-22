@@ -18,4 +18,5 @@
 \ir migrations/013_import_storage.sql
 \ir migrations/014_import_queue.sql
 \ir migrations/017_station_updated_at_export_index.sql
+\ir migrations/018_import_batch_staging.sql
 

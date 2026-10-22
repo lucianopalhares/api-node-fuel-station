@@ -58,6 +58,22 @@
 - A validação de datas aceita os formatos `DD/MM/AAAA`, `MM/DD/AAAA` e `AAAA-MM-DD`, convertendo-os para `AAAA-MM-DD` antes do banco.
 - Datas inválidas são rejeitadas. Quando dia e mês são menores ou iguais a 12, a interpretação assume o padrão brasileiro por compatibilidade com `docs/example.csv`.
 
+## Importação assíncrona com staging e processamento em lotes
+
+- A tela `/imports` envia o CSV para a API. A API salva o arquivo no storage e publica no RabbitMQ somente o `importId` e o `storageKey`; o conteúdo do arquivo não é transportado na mensagem.
+- O worker consome o job e busca o CSV no storage por meio de `CsvImportReader`.
+- `CsvImportStager` lê o arquivo em streaming, valida e normaliza as linhas e grava `import_rows` em lotes de 1.000 registros.
+- Linhas válidas entram no staging com status `ready`, enquanto linhas inválidas permanecem registradas com status `invalid`, dados brutos, dados normalizados e os erros encontrados.
+- `ImportBatchApplier` consulta somente as linhas `ready` e aplica os dados definitivos em lotes de 500 registros.
+- Cada lote usa uma única transação e resolve catálogos, responsáveis, postos e combustíveis de forma agrupada.
+- Os repositories PostgreSQL ficam separados por responsabilidade em `infrastructure/database/postgres`, mantendo a aplicação dependente de interfaces e não de SQL ou do pacote `pg`.
+- `ImportFinalizer` calcula os contadores a partir de `import_rows` e atualiza o status final para `completed`, `completed_with_errors` ou `failed`.
+- A tela `/imports` consulta o resumo e os detalhes paginados, permitindo acompanhar o status, as linhas criadas, atualizadas e inválidas, além de baixar as linhas com erro.
+
+### Motivo e trade-off
+
+O staging separa a validação da aplicação definitiva, conserva a auditoria de cada linha e evita manter o arquivo inteiro em memória. Os lotes reduzem a quantidade de transações e consultas ao PostgreSQL. O tamanho de 1.000 linhas para staging e 500 para aplicação é configurável e deve ser reavaliado com medições de carga; lotes menores reduzem o peso das transações definitivas, que envolvem vários relacionamentos.
+
 ## Unicidade, duplicidades e transações
 
 - `imports.file_checksum` possui a constraint `imports_file_checksum_unique`, garantindo que dois registros não representem o mesmo arquivo. O campo continua nullable para preservar compatibilidade com registros ou fluxos que podem não possuir checksum; valores não nulos são únicos.

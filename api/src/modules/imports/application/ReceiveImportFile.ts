@@ -1,4 +1,4 @@
-// recebe o arquivo, salva seus metadados e agenda o processamento.
+// recebe o arquivo, salva os metadados e agenda o processamento.
 
 import type { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
