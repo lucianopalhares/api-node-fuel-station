@@ -69,3 +69,7 @@ export async function getImportDetails(importId: string, page: number, limit: nu
 export function getImportErrorExportUrl(importId: string): string {
   return `/api/imports/${encodeURIComponent(importId)}/errors/export`;
 }
+
+export function getImportExportUrl(importId: string): string {
+  return `/api/imports/${encodeURIComponent(importId)}/export`;
+}

@@ -27,6 +27,15 @@
             <td>{{ formatDate(item.startedAt) }}</td>
             <td class="text-right">
               <v-btn
+                size="small"
+                variant="text"
+                color="primary"
+                prepend-icon="mdi-download"
+                :href="getImportExportUrl(item.id)"
+              >
+                Baixar planilha
+              </v-btn>
+              <v-btn
                 v-if="item.errorRows > 0"
                 size="small"
                 variant="text"
@@ -71,7 +80,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { getImportDetails, getImportErrorExportUrl, getImports } from '../services/imports';
+import { getImportDetails, getImportErrorExportUrl, getImportExportUrl, getImports } from '../services/imports';
 import type { ImportRow, ImportRowStatus, ImportSummary } from '../types/import';
 
 const route = useRoute();
