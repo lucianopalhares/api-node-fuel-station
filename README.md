@@ -42,6 +42,16 @@ docker compose run --rm api npm run db:seed:fixtures
 
 O fixture é destinado apenas a desenvolvimento e testes. Para testar a importação real, use um dos arquivos CSV documentados abaixo.
 
+Reinicie a aplicacao:
+
+```sh
+docker compose up -d --build
+```
+
+Acesse a aplicação na url:
+
+<http://localhost:5173/stations>
+
 ## Planilha modelo
 
 O arquivo modelo, sem dados preenchidos, está disponível em [`docs/csv-example.csv`](docs/csv-example.csv). Use-o como referência para criar novos arquivos.
