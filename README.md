@@ -52,6 +52,10 @@ Acesse a aplicação na url:
 
 <http://localhost:5173/stations>
 
+Acompanhe os logs na url:
+
+<http://localhost:9999>
+
 ## Planilha modelo
 
 O arquivo modelo, sem dados preenchidos, está disponível em [`docs/csv-example.csv`](docs/csv-example.csv). Use-o como referência para criar novos arquivos.
@@ -65,14 +69,14 @@ O arquivo deve manter:
 - a ordem das colunas;
 - a lista de combustíveis separada por vírgulas dentro do campo `combustiveis`.
 
-### Pela interface
+### Realizar importação pela interface
 
 1. Acesse <http://localhost:5173/stations>.
 2. Clique em **Importar postos**.
 3. Selecione `docs/csv-with-data.csv` ou `docs/csv-example.csv`.
 4. Envie o arquivo e acompanhe o resultado do processamento.
 
-### Pela API
+### Realizar importação pela API
 
 Na raiz do projeto, execute:
 
@@ -91,7 +95,7 @@ curl -i -F file=@docs/csv-with-data.csv http://localhost:3261/imports
 | RabbitMQ | <http://localhost:15673> |
 | MinIO | <http://localhost:9001> |
 
-Credenciais do RabbitMQ:
+Credenciais do RabbitMQ (fila):
 
 ```text
 usuário: ipdv
