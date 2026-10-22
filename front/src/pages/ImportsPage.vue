@@ -2,7 +2,10 @@
   <div>
     <div class="d-flex align-center justify-space-between mb-6">
       <div><h1 class="text-h4">Importações</h1><p class="text-medium-emphasis">Acompanhe o resultado dos arquivos processados.</p></div>
-      <v-btn prepend-icon="mdi-refresh" variant="outlined" :loading="loading" @click="loadImports">Atualizar</v-btn>
+      <div class="d-flex ga-2">
+        <v-btn color="secondary" prepend-icon="mdi-upload" @click="importDialogRef?.open()">Importar postos</v-btn>
+        <v-btn prepend-icon="mdi-refresh" variant="outlined" :loading="loading" @click="loadImports">Atualizar</v-btn>
+      </div>
     </div>
     <v-alert v-if="error" type="error" variant="tonal" class="mb-4">{{ error }}</v-alert>
     <v-progress-linear v-if="loading" indeterminate color="primary" class="mb-4" />
@@ -53,6 +56,8 @@
       </v-table>
     </v-card>
 
+    <ImportStationsDialog ref="importDialogRef" @imported="loadImports" />
+
     <v-dialog v-model="detailsOpen" max-width="1100">
       <v-card>
         <v-card-title class="d-flex align-center"><span class="text-truncate">{{ selected?.filename || 'Detalhes da importação' }}</span><v-spacer /><v-btn icon="mdi-close" variant="text" @click="detailsOpen = false" /></v-card-title>
@@ -82,8 +87,11 @@ import { onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { getImportDetails, getImportErrorExportUrl, getImportExportUrl, getImports } from '../services/imports';
 import type { ImportRow, ImportRowStatus, ImportSummary } from '../types/import';
+import ImportStationsDialog from '../components/ImportStationsDialog.vue';
 
 const route = useRoute();
+
+const importDialogRef = ref<InstanceType<typeof ImportStationsDialog> | null>(null);
 
 const imports = ref<ImportSummary[]>([]); const loading = ref(false); const error = ref('');
 const detailsOpen = ref(false); const detailsLoading = ref(false); const detailsError = ref('');
