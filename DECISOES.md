@@ -1,5 +1,7 @@
 # Principais implementações e decisões
 
+**Histórico de decisões:** o arquivo `TIMELINE.md` reúne as decisões tomadas ao longo do desenvolvimento do projeto, incluindo contexto e evolução.
+
 ## Arquitetura e organização do código
 
 - É usado um padrão DDD.
@@ -63,6 +65,7 @@
 - Cada linha do CSV é processada em uma transação PostgreSQL própria.
 - A criação ou atualização do posto, dos responsáveis e catálogos, a remoção e inserção dos combustíveis e o registro em `import_rows` são confirmados juntos.
 - Se qualquer etapa falhar, a transação executa rollback. A linha inválida é registrada como `invalid` depois da reversão.
+- Quando o mesmo CNPJ aparece mais de uma vez no mesmo CSV, as ocorrências são processadas na ordem do arquivo. O posto é atualizado pelos dados da última ocorrência válida, e cada linha permanece registrada em `import_rows`, com status `imported` ou `updated`. Se uma ocorrência for inválida, ela é registrada como `invalid` sem desfazer o processamento das demais linhas.
 
 ## Fila e observabilidade
 
