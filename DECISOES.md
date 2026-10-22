@@ -10,6 +10,81 @@
 - Normalizações de texto, dígitos, email, inteiros e limites ficam em `modules/shared/validation/InputValidation.ts`. Os outros módulos reaproveitam os métodos.
 - Há um módulo compartilhado para tratamento de erros entre os outros módulos.
 
+## Arquitetura do fluxo de importação
+
+```text
+Fluxo de importação de CSV
+│
+├── 1. Frontend — seleção e acompanhamento
+│   ├── front/src/components/ImportStationsDialog.vue
+│   │   └── Seleciona o arquivo, valida a extensão e inicia o envio.
+│   ├── front/src/services/imports.ts
+│   │   └── Envia o CSV para a API e consulta os resultados.
+│   └── front/src/pages/ImportsPage.vue
+│       └── Exibe status, resumo, erros e detalhes da importação.
+│
+├── 2. Recebimento da API — entrada do arquivo
+│   ├── api/src/modules/imports/presentation/importRoutes.ts
+│   │   └── Recebe multipart/form-data e valida nome, tipo e tamanho.
+│   ├── api/src/modules/imports/application/ReceiveImportFile.ts
+│   │   └── Cria a importação, calcula checksum e salva os metadados.
+│   ├── api/src/modules/imports/infrastructure/S3ObjectStorage.ts
+│   │   └── Armazena o CSV sem carregar o arquivo inteiro em memória.
+│   └── api/src/modules/imports/infrastructure/QueueImportJobPublisher.ts
+│       └── Publica na fila do RabbitMQ apenas o importId e a storageKey.
+│
+├── 3. Processamento assíncrono — execução do job
+│   ├── api/src/worker.ts
+│   │   └── Consome a fila e inicia o processamento.
+│   ├── api/src/modules/queue/infrastructure/RabbitMqQueue.ts
+│   │   └── Gerencia o consumo e as falhas das mensagens.
+│   └── api/src/modules/imports/application/ProcessImport.ts
+│       └── Orquestra staging, aplicação dos dados e finalização.
+│
+├── 4. Staging — leitura, validação e normalização
+│   ├── api/src/modules/imports/application/CsvImportReader.ts
+│   │   └── Lê o CSV do storage em streaming.
+│   ├── api/src/modules/imports/application/staging/ImportRowValidator.ts
+│   │   └── Valida campos, documentos, datas, números e combustíveis.
+│   ├── api/src/modules/imports/application/staging/CsvImportStager.ts
+│   │   └── Grava cada linha como ready ou invalid em lotes de 1.000.
+│   └── api/src/modules/imports/infrastructure/database/postgres/staging/
+│       └── PostgresImportStagingRepository.ts
+│           └── Persiste dados brutos, normalizados e erros em import_rows.
+│
+├── 5. Aplicação definitiva — gravação dos postos
+│   ├── api/src/modules/imports/application/batch-apply/ImportBatchApplier.ts
+│   │   └── Busca linhas ready e processa lotes de 500 registros.
+│   ├── api/src/modules/imports/infrastructure/database/postgres/batch-apply/
+│   │   ├── PostgresCatalogBatchRepository.ts
+│   │   │   └── Resolve cidades, bandeiras, combustíveis, cargos e status.
+│   │   ├── PostgresResponsibleBatchRepository.ts
+│   │   │   └── Cria ou atualiza os responsáveis.
+│   │   ├── PostgresStationBatchRepository.ts
+│   │   │   └── Cria ou atualiza postos usando o CNPJ.
+│   │   └── PostgresStationFuelBatchRepository.ts
+│   │       └── Atualiza os combustíveis relacionados ao posto.
+│
+├── 6. Finalização — fechamento e resumo
+│   ├── api/src/modules/imports/application/finalization/ImportFinalizer.ts
+│   │   └── Atualiza o status final da importação.
+│   └── api/src/modules/imports/infrastructure/database/postgres/finalization/
+│       └── PostgresImportSummaryRepository.ts
+│           └── Calcula registros importados, atualizados e inválidos.
+│
+└── 7. Consulta — exibição do resultado
+    ├── api/src/modules/import-results/application/ListImports.ts
+    │   └── Lista os resumos das importações.
+    ├── api/src/modules/import-results/application/GetImportDetails.ts
+    │   └── Consulta as linhas e os erros de uma importação.
+    └── api/sql/migrations/004_imports.sql,
+        api/sql/migrations/011_import_rows.sql e
+        api/sql/migrations/018_import_batch_staging.sql
+        └── Criam as tabelas da importação e os estados do staging.
+```
+
+O frontend envia o CSV para a API, que o armazena e publica uma tarefa assíncrona. O worker lê o arquivo em streaming, valida e normaliza cada linha, preserva o resultado no staging e aplica somente as linhas válidas em lotes. Ao final, o resumo é calculado a partir das linhas registradas e fica disponível para consulta na interface.
+
 ## Execução e infraestrutura
 
 - A API usa Node.js `22.23.2`, Express e TypeScript.
@@ -123,3 +198,4 @@ O staging separa a validação da aplicação definitiva, conserva a auditoria d
 - As datas da listagem usam `stations.updated_at` e a última linha de `import_rows` com status `imported` ou `updated`.
 - O link da importação usa `importId` na URL, exibindo a data da última importação em cada linha de posto e permitindo abrir a importação específica para visualizar seus detalhes.
 - Na tela de importações, as importações com erros parciais ou erros possuem um botão para baixar uma planilha somente com as linhas de erro, permitindo corrigi-las e tentar uma nova importação.
+
