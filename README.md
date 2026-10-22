@@ -126,6 +126,16 @@ Para parar e remover também os volumes do banco, RabbitMQ, MinIO e logs:
 docker compose down -v
 ```
 
+## Rodar os testes
+
+```bash
+docker compose run --rm --no-deps api npm run test:validation
+```
+
+```bash
+docker compose run --rm --no-deps api npm run lint:validation
+```
+
 ## Screenshots
 
 ### Lista de importações

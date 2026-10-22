@@ -199,3 +199,21 @@ O staging separa a validação da aplicação definitiva, conserva a auditoria d
 - O link da importação usa `importId` na URL, exibindo a data da última importação em cada linha de posto e permitindo abrir a importação específica para visualizar seus detalhes.
 - Na tela de importações, as importações com erros parciais ou erros possuem um botão para baixar uma planilha somente com as linhas de erro, permitindo corrigi-las e tentar uma nova importação.
 
+### Testes e lint na API para a validação da importação
+
+Os testes automatizados ficam isolados em `api/tests/validation/`:
+
+- `InputValidation`: normalização de CNPJ em notação científica, CEP com zero à esquerda e rejeição de documentos repetidos;
+- `DateValidation`: formatos aceitos, datas inexistentes e ano bissexto;
+- `CsvImportValidation`: extensão, MIME e header esperado;
+- `ImportRowValidator`: normalização da linha, campos obrigatórios, documentos, email, combustíveis, datas e inteiros.
+
+Os testes são unitários e não acessam PostgreSQL, storage, RabbitMQ ou rede.
+
+## O que faria se tivesse mais tempo
+
+- Faria cobertura de testes com testes de integração para PostgreSQL, storage e RabbitMQ, além de testes end-to-end do fluxo completo de importação.
+- Melhoraria o catálogo de erros, usando mais códigos de erro, mensagens específicas por cada campo e orientações mais claras pra correção no frontend.
+- Executaria testes de carga com arquivos de 10 mil, 100 mil e 1 milhão de linhas, medindo tempo, memória, uso do banco, fila e tamanho ideal dos lotes.
+- Seria importante ter a parte de retentativa caso houvesse falha na fila quando existe por exemplo falhas temporárias de storage, banco e RabbitMQ, com atualização mais detalhada do progresso da importação.
+- Métricas e alertas para tempo de processamento, filas paradas, falhas e registros inválidos.

@@ -13,7 +13,9 @@
     "worker": "tsx src/worker.ts",
     "db:migrate": "node scripts/run-sql-directory.mjs migrations",
     "db:seed:production": "node scripts/run-sql-directory.mjs seeders/production",
-    "db:seed:fixtures": "node scripts/run-sql-directory.mjs seeders/fixtures"
+    "db:seed:fixtures": "node scripts/run-sql-directory.mjs seeders/fixtures",
+    "test:validation": "vitest run tests/validation",
+    "lint:validation": "eslint src/modules/shared/validation src/modules/imports/application/staging/ImportRowValidator.ts tests/validation"
   },
   "dependencies": {
     "express": "^5.1.0",
@@ -30,6 +32,10 @@
     "typescript": "^5.9.2",
     "@types/busboy": "^1.5.4",
     "tsx": "^4.20.5",
-    "@types/amqplib": "^0.10.7"
+    "@types/amqplib": "^0.10.7",
+    "@eslint/js": "^9.39.1",
+    "eslint": "^9.39.1",
+    "typescript-eslint": "^8.46.3",
+    "vitest": "^3.2.4"
   }
 }
