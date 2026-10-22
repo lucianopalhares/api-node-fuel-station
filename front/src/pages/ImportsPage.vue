@@ -14,7 +14,7 @@
       <v-table>
         <thead>
           <tr>
-            <th>Arquivo</th><th>Status</th><th>Total processadas</th><th>Criadas</th><th>Atualizadas</th><th>Com erro</th><th>Iniciada em</th>
+            <th>Arquivo</th><th>Status</th><th>Total processadas</th><th>Criadas</th><th>Atualizadas</th><th>Com erro</th><th>Iniciada em</th><th>Finalizada em</th>
             <th class="text-right actions-header">
               <span class="text-caption text-medium-emphasis font-weight-regular">
                 Baixar erros gera a mesma planilha somente com as <br>linhas com erro para corrigir e tentar novamente.
@@ -28,6 +28,7 @@
             <td><v-chip size="small" :color="statusColor(item.status)" variant="tonal">{{ statusLabel(item.status) }}</v-chip></td>
             <td>{{ item.totalRows }}</td><td class="text-success">{{ item.importedRows }}</td><td class="text-info">{{ item.updatedRows }}</td><td class="text-error">{{ item.errorRows }}</td>
             <td>{{ formatDate(item.startedAt) }}</td>
+            <td>{{ item.finishedAt ? formatDate(item.finishedAt) : '—' }}</td>
             <td class="text-right">
               <v-btn
                 size="small"
@@ -51,7 +52,7 @@
               <v-btn size="small" variant="text" @click="openDetails(item)">Ver detalhes</v-btn>
             </td>
           </tr>
-          <tr v-if="!imports.length"><td colspan="8" class="text-center py-8">Nenhuma importação encontrada.</td></tr>
+          <tr v-if="!imports.length"><td colspan="9" class="text-center py-8">Nenhuma importação encontrada.</td></tr>
         </tbody>
       </v-table>
     </v-card>
@@ -118,7 +119,7 @@ async function loadDetails(page: number) {
   finally { detailsLoading.value = false; }
 }
 function metrics(item: ImportSummary) { return [{ label: 'Total processadas', value: item.totalRows, class: '' }, { label: 'Criadas', value: item.importedRows, class: 'text-success' }, { label: 'Atualizadas', value: item.updatedRows, class: 'text-info' }, { label: 'Com erro', value: item.errorRows, class: 'text-error' }]; }
-function formatDate(value: string) { return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)); }
+function formatDate(value: string) { return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'medium' }).format(new Date(value)); }
 function statusLabel(value: string) {
   return ({
     queued: 'Na fila',
